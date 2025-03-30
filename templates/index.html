@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Calculadora de Rectas</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Calculadora de Intersección de Rectas</h1>
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+  <form method="post">
+    <h2>Recta 1 (a₁x + b₁y + c₁ = 0)</h2>
+    <label>a₁: <input type="text" name="a1" required></label><br>
+    <label>b₁: <input type="text" name="b1" required></label><br>
+    <label>c₁: <input type="text" name="c1" required></label><br>
+    
+    <h2>Recta 2 (a₂x + b₂y + c₂ = 0)</h2>
+    <label>a₂: <input type="text" name="a2" required></label><br>
+    <label>b₂: <input type="text" name="b2" required></label><br>
+    <label>c₂: <input type="text" name="c2" required></label><br><br>
+    
+    <button type="submit">Calcular</button>
+  </form>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Resultado de Cálculos</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .resultado { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Resultado</h1>
+  <div class="resultado">
+    <h2>Procedimiento (Método de Cramer):</h2>
+    <p>{{ proc_texto | safe }}</p>
+  </div>
+  
+  <div class="resultado">
+    <h2>Tipo de sistema:</h2>
+    {% if resultado.tipo == "interseccion" %}
+      <p>✅ Punto de intersección: ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</p>
+    {% elif resultado.tipo == "paralelas" %}
+      <p>❌ Las rectas son paralelas.</p>
+    {% elif resultado.tipo == "coincidentes" %}
+      <p>⭐ Las rectas son coincidentes.</p>
+    {% else %}
+      <p>❓ Caso indefinido.</p>
+    {% endif %}
+  </div>
+  
+  <div class="resultado">
+    <h2>Datos de la Recta 1:</h2>
+    <ul>
+      <li>Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</li>
+      <li>Intersección con eje X: {{ datos1.interseccionX }}</li>
+      <li>Intersección con eje Y: {{ datos1.interseccionY }}</li>
+      <li>Ángulo con eje X: {{ datos1.anguloConEjeX }}°</li>
+      <li>Distancia al origen: {{ datos1.distanciaAlOrigen }}</li>
+    </ul>
+  </div>
+  
+  <div class="resultado">
+    <h2>Datos de la Recta 2:</h2>
+    <ul>
+      <li>Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</li>
+      <li>Intersección con eje X: {{ datos2.interseccionX }}</li>
+      <li>Intersección con eje Y: {{ datos2.interseccionY }}</li>
+      <li>Ángulo con eje X: {{ datos2.anguloConEjeX }}°</li>
+      <li>Distancia al origen: {{ datos2.distanciaAlOrigen }}</li>
+    </ul>
+  </div>
+  
+  <div class="resultado">
+    <h2>Gráfica de las rectas:</h2>
+    <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas">
+  </div>
+  
+  <a href="{{ url_for('index') }}">Realizar nuevo cálculo</a>
+</body>
+</html>
