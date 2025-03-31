@@ -8,7 +8,11 @@ import io
 import base64
 
 app = Flask(__name__)
-app.secret_key = 'mi_clave_secreta'  # Cambia esta clave por una más segura
+app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
+
+# Configuración de sesión (para mantener el login activo)
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
 # --- Funciones de cálculo y graficado ---
 
