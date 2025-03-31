@@ -12,7 +12,7 @@
   --button-hover: #81c784;
 }
 
-/* Fondo general con color verde */
+/* Fondo general */
 body {
   font-family: 'Poppins', sans-serif;
   background-color: var(--background-color);
@@ -220,7 +220,7 @@ body {
   margin: 0 auto;
 }
 
-/* Login container (usa contenedor blanco) */
+/* Login container */
 .login-container {
   background: white;
   max-width: 400px;

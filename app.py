@@ -8,19 +8,18 @@ import base64
 import csv
 
 app = Flask(__name__)
-app.secret_key = 'j350z271123r'  # Cambia esta clave por una más segura en producción
+app.secret_key = 'j350z271123r'  # Cambia esto por una clave más segura en producción
 
-# Configuración de sesión (para mantener el login activo)
+# Configuración de sesión
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
 
 # ---------------------------
-# Función: Convertir recta de formato general a forma pendiente-intersección
+# Función: Convertir recta en formato general a forma pendiente-intersección
 # ---------------------------
 def general_to_slope_intercept(A, B, C):
-    # Si B es cero, la recta es vertical y no tiene forma pendiente-intersección
     if abs(B) < 1e-8:
-        return None, None  # Se puede tratar aparte
+        return None, None  # Recta vertical
     m = -A / B
     b = -C / B
     return m, b
@@ -36,15 +35,13 @@ def distance_between_points(x1, y1, x2, y2):
 # ---------------------------
 def angle_between_lines(m1, m2):
     if m1 is None or m2 is None:
-        # Si alguna es vertical, se considera 90° (o si ambas son verticales, 0°)
-        if m1 is None and m2 is None:
-            return 0.0
-        return 90.0
+        # Si ambas son verticales, ángulo 0; si solo una, 90°
+        return 0.0 if (m1 is None and m2 is None) else 90.0
     tan_angle = abs((m1 - m2) / (1 + m1 * m2))
     return math.degrees(math.atan(tan_angle))
 
 # ---------------------------
-# Función: Graficar las rectas con más detalles
+# Función: Graficar dos rectas con detalles
 # ---------------------------
 def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_range=(-10, 10)):
     plt.figure(figsize=(7, 7))
@@ -59,7 +56,6 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_range=(-10, 10)):
     if y1 is not None:
         plt.plot(x_vals, y1, label=f"R1: {a1}x + {b1}y + {c1} = 0", color="darkorange")
     else:
-        # Recta vertical, calcular constante de x
         x_const = -c1 / a1
         plt.axvline(x_const, color='darkorange', label=f"R1: x = {x_const:.2f}")
     
@@ -70,13 +66,12 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_range=(-10, 10)):
         x_const = -c2 / a2
         plt.axvline(x_const, color='teal', label=f"R2: x = {x_const:.2f}")
     
-    # Graficar punto de intersección si existe
-    if resultado.get("tipo") == "interseccion" and resultado.get("punto") is not None:
-        x_sol, y_sol = resultado["punto"]
-        plt.plot(x_sol, y_sol, 'ko', label="Intersección")
-        # Calcular distancia al origen
-        dist = distance_between_points(0, 0, x_sol, y_sol)
-        plt.text(x_sol, y_sol, f"  ({x_sol:.2f}, {y_sol:.2f})\nDist: {dist:.2f}", fontsize=9, color="blue")
+    # Graficar el punto de intersección si existe
+    if resultado.get("tipo") == "interseccion" and resultado.get("punto"):
+        x_int, y_int = resultado["punto"]
+        plt.plot(x_int, y_int, 'ko', label="Intersección")
+        dist = distance_between_points(0, 0, x_int, y_int)
+        plt.text(x_int, y_int, f"  ({x_int:.2f}, {y_int:.2f})\nDist: {dist:.2f}", fontsize=9, color="blue")
     
     plt.xlabel("Eje X")
     plt.ylabel("Eje Y")
@@ -96,16 +91,45 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_range=(-10, 10)):
     return image_base64
 
 # ---------------------------
-# Función: Resolver sistema de rectas usando el método de Cramer
+# Función: Graficar una sola ecuación
+# ---------------------------
+def graficarEcuacionSimple(a, b, c, x_range=(-10, 10)):
+    plt.figure(figsize=(7, 7))
+    x_vals = [x_range[0] + i * (x_range[1]-x_range[0]) / 400 for i in range(401)]
+    if abs(b) < 1e-8:
+        # Ecuación vertical: x = -c/a
+        x_const = -c / a
+        plt.axvline(x_const, color="purple", label=f"Ecuación: x = {x_const:.2f}")
+    else:
+        y_vals = [(-a * x - c) / b for x in x_vals]
+        plt.plot(x_vals, y_vals, color="purple", label=f"Ecuación: {a}x + {b}y + {c} = 0")
+    
+    plt.xlabel("Eje X")
+    plt.ylabel("Eje Y")
+    plt.title("Gráfica de la Ecuación")
+    plt.legend(loc="best")
+    plt.grid(True)
+    plt.xlim(x_range)
+    plt.ylim(-10, 10)
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    plt.close()
+    return image_base64
+
+# ---------------------------
+# Función: Resolver sistema de rectas (método de Cramer)
 # ---------------------------
 def resolverSistema(a1, b1, c1, a2, b2, c2):
-    # Reescribir en forma: a*x + b*y = -c
     A1, B1, C1 = a1, b1, -c1
     A2, B2, C2 = a2, b2, -c2
     det = A1 * B2 - A2 * B1
     resultado = {"det": det, "tipo": None, "punto": None}
     if abs(det) < 1e-8:
-        # Paralelas o coincidentes: se pueden hacer más validaciones
         resultado["tipo"] = "paralelas"
     else:
         x_sol = (C1 * B2 - C2 * B1) / det
@@ -119,19 +143,14 @@ def resolverSistema(a1, b1, c1, a2, b2, c2):
 # ---------------------------
 @app.route('/export')
 def export_results():
-    # Se espera que los resultados se guarden en la sesión
     if not session.get('logged_in') or 'export_data' not in session:
         flash("No hay datos para exportar.")
         return redirect(url_for('index'))
     
-    export_data = session['export_data']  # Debe ser un diccionario con los resultados
-    # Crear archivo CSV en memoria
+    export_data = session['export_data']
     si = io.StringIO()
     cw = csv.writer(si)
-    # Escribir encabezados
     cw.writerow(["Recta", "Pendiente", "Intersección X", "Intersección Y", "Distancia al Origen"])
-    # Suponiendo que export_data tenga datos de dos rectas, ejemplo:
-    # export_data = {"recta1": {...}, "recta2": {...}}
     for key in export_data:
         data = export_data[key]
         cw.writerow([
@@ -150,12 +169,11 @@ def export_results():
 # Ruta para login
 # ---------------------------
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def login_route():
     if request.method == 'POST':
         try:
             username = request.form.get('username')
             password = request.form.get('password')
-            # Validación simple: usuario fijo
             if username == 'alumno' and password == 'amrd':
                 session['logged_in'] = True
                 session['user'] = username
@@ -167,6 +185,9 @@ def login():
             flash(str(e))
             return render_template("login.html")
     return render_template("login.html")
+
+# Alias para evitar conflicto de nombres
+app.add_url_rule('/login', 'login', login_route, methods=['GET', 'POST'])
 
 # ---------------------------
 # Ruta para logout
@@ -193,7 +214,7 @@ def index():
                     return None
                 return float(val)
             
-            # Obtener coeficientes de las dos rectas en formato general
+            # Intentar obtener coeficientes para dos rectas
             a1 = get_val("a1")
             b1 = get_val("b1")
             c1 = get_val("c1")
@@ -201,65 +222,73 @@ def index():
             b2 = get_val("b2")
             c2 = get_val("c2")
             
-            # Validar que se ingresaron datos
-            if None in [a1, b1, c1, a2, b2, c2]:
-                flash("Por favor ingresa todos los coeficientes numéricos.")
+            # Validación: Se debe ingresar la primera recta
+            if a1 is None or b1 is None or c1 is None:
+                flash("Ingrese los coeficientes de al menos la primera recta.")
                 return redirect(url_for('index'))
             
-            # Resolver el sistema mediante el método de Cramer
-            resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+            modo = "dual"
+            # Si la segunda recta no se ingresa, se toma modo simple
+            if a2 is None and b2 is None and c2 is None:
+                modo = "simple"
             
-            # Convertir rectas a forma pendiente-intersección (si es posible)
-            m1, b_inter1 = general_to_slope_intercept(a1, b1, c1)
-            m2, b_inter2 = general_to_slope_intercept(a2, b2, c2)
-            
-            # Calcular ángulo entre rectas
-            angulo = angle_between_lines(m1, m2)
-            
-            # Calcular distancia del punto de intersección al origen
-            if resultado.get("punto"):
-                x_int, y_int = resultado["punto"]
-                dist = distance_between_points(0, 0, x_int, y_int)
-            else:
-                dist = None
-            
-            # Generar gráfica con ejes, etiquetas y rango predeterminado
-            grafico = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
-            
-            # Guardar algunos datos en sesión para exportarlos (ejemplo para dos rectas)
-            session['export_data'] = {
-                "recta1": {
-                    "pendiente": m1 if m1 is not None else "Vertical",
-                    "interseccionX": (-c1 / a1) if abs(b1) < 1e-8 else "N/A",
-                    "interseccionY": (-c1 / b1) if abs(b1) >= 1e-8 else "N/A",
-                    "distanciaAlOrigen": dist if dist is not None else "N/A"
-                },
-                "recta2": {
-                    "pendiente": m2 if m2 is not None else "Vertical",
-                    "interseccionX": (-c2 / a2) if abs(b2) < 1e-8 else "N/A",
-                    "interseccionY": (-c2 / b2) if abs(b2) >= 1e-8 else "N/A",
-                    "distanciaAlOrigen": dist if dist is not None else "N/A"
+            if modo == "dual":
+                resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+                m1, b_inter1 = general_to_slope_intercept(a1, b1, c1)
+                m2, b_inter2 = general_to_slope_intercept(a2, b2, c2)
+                angulo = angle_between_lines(m1, m2)
+                if resultado.get("punto"):
+                    x_int, y_int = resultado["punto"]
+                    dist = distance_between_points(0, 0, x_int, y_int)
+                else:
+                    dist = None
+                grafico = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
+                
+                # Guardar datos para exportar (ejemplo)
+                session['export_data'] = {
+                    "recta1": {
+                        "pendiente": m1 if m1 is not None else "Vertical",
+                        "interseccionX": (-c1 / a1) if abs(b1) < 1e-8 else "N/A",
+                        "interseccionY": (-c1 / b1) if abs(b1) >= 1e-8 else "N/A",
+                        "distanciaAlOrigen": dist if dist is not None else "N/A"
+                    },
+                    "recta2": {
+                        "pendiente": m2 if m2 is not None else "Vertical",
+                        "interseccionX": (-c2 / a2) if abs(b2) < 1e-8 else "N/A",
+                        "interseccionY": (-c2 / b2) if abs(b2) >= 1e-8 else "N/A",
+                        "distanciaAlOrigen": dist if dist is not None else "N/A"
+                    }
                 }
-            }
-            
-            # Además, se pueden enviar otros detalles: ángulo entre rectas
-            datos_extra = {
-                "angulo_entre_rectas": f"{angulo:.2f}°",
-                "punto_interseccion": resultado.get("punto"),
-                "distancia_origen": f"{dist:.2f}" if dist is not None else "N/A"
-            }
-            
-            # Enviar todos los datos a la plantilla
-            return render_template("resultado.html", 
-                                   resultado=resultado, 
-                                   grafico=grafico, 
-                                   m1=m1, b1=b_inter1, 
-                                   m2=m2, b2=b_inter2,
-                                   datos_extra=datos_extra)
+                
+                datos_extra = {
+                    "angulo_entre_rectas": f"{angulo:.2f}°",
+                    "punto_interseccion": resultado.get("punto"),
+                    "distancia_origen": f"{dist:.2f}" if dist is not None else "N/A"
+                }
+                
+                return render_template("resultado.html", 
+                                       resultado=resultado, 
+                                       grafico=grafico, 
+                                       datos_extra=datos_extra)
+            else:
+                # Modo simple: graficar una sola ecuación
+                # Calcular forma pendiente-intersección
+                m, b_inter = general_to_slope_intercept(a1, b1, c1)
+                # Calcular intersecciones (si es posible)
+                x_inter = -c1 / a1 if abs(a1) > 1e-8 else None
+                y_inter = -c1 / b1 if abs(b1) > 1e-8 else None
+                # Graficar la ecuación simple
+                grafico = graficarEcuacionSimple(a1, b1, c1)
+                # Construir un "resultado" simple para mostrar datos
+                resultado = {"tipo": "simple", "pendiente": m, "interseccion": (x_inter, y_inter)}
+                return render_template("resultado.html", 
+                                       resultado=resultado, 
+                                       grafico=grafico, 
+                                       datos_extra={"modo": "simple"})
         except Exception as e:
             flash("Error: " + str(e))
             return redirect(url_for('index'))
     return render_template("index.html", error=None)
-    
+
 if __name__ == "__main__":
     app.run(debug=True)
