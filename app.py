@@ -97,19 +97,20 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     plt.close()
     return buf
 
-# --- Rutas para el login y autenticación ---
+# --- Rutas para login y autenticación ---
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # Validación simple: ajusta las credenciales según tus necesidades
-        if username == "amrd" and password == "password":
+        # Validación con usuario "alumno" y contraseña "amrd"
+        if username == "alumno" and password == "amrd":
             session["logged_in"] = True
+            session["user"] = username
             return redirect(url_for("index"))
         else:
-            flash("Credenciales inválidas, intente de nuevo.")
+            flash("Usuario o contraseña incorrectos, intente de nuevo.")
             return render_template("login.html")
     return render_template("login.html")
 
@@ -163,7 +164,7 @@ def index():
         buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
-        return render_template("result.html",
+        return render_template("resultado.html",
                                resultado=resultado,
                                datos1=datos1,
                                datos2=datos2,
