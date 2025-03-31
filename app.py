@@ -8,14 +8,14 @@ import base64
 import csv
 
 app = Flask(__name__)
-app.secret_key = 'j350z271123r'  # Cambia esto por una clave más segura en producción
+app.secret_key = 'j350z271123r'  # Cambia esta clave por una más segura en producción
 
 # Configuración de sesión
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
 
 # ---------------------------
-# Función: Convertir recta de formato general a forma pendiente-intersección
+# Función: Convertir recta en formato general a forma pendiente-intersección
 # ---------------------------
 def general_to_slope_intercept(A, B, C):
     if abs(B) < 1e-8:
@@ -35,6 +35,7 @@ def distance_between_points(x1, y1, x2, y2):
 # ---------------------------
 def angle_between_lines(m1, m2):
     if m1 is None or m2 is None:
+        # Si ambas son verticales, ángulo 0; si solo una, 90°
         if m1 is None and m2 is None:
             return 0.0
         return 90.0
@@ -156,33 +157,6 @@ def resolverSistema(a1, b1, c1, a2, b2, c2):
     return resultado
 
 # ---------------------------
-# Ruta para exportar resultados en CSV
-# ---------------------------
-@app.route('/export')
-def export_results():
-    if not session.get('logged_in') or 'export_data' not in session:
-        flash("No hay datos para exportar.")
-        return redirect(url_for('index'))
-    
-    export_data = session['export_data']
-    si = io.StringIO()
-    cw = csv.writer(si)
-    cw.writerow(["Recta", "Pendiente", "Intersección X", "Intersección Y", "Distancia al Origen"])
-    for key in export_data:
-        data = export_data[key]
-        cw.writerow([
-            key,
-            data.get("pendiente", "N/A"),
-            data.get("interseccionX", "N/A"),
-            data.get("interseccionY", "N/A"),
-            data.get("distanciaAlOrigen", "N/A")
-        ])
-    output = si.getvalue()
-    return Response(output,
-                    mimetype="text/csv",
-                    headers={"Content-Disposition": "attachment;filename=resultados_rectas.csv"})
-
-# ---------------------------
 # Ruta para login
 # ---------------------------
 @app.route('/login', methods=['GET', 'POST'])
@@ -203,7 +177,6 @@ def login_route():
             return render_template("login.html")
     return render_template("login.html")
 
-# Alias para evitar conflicto de nombres
 app.add_url_rule('/login', 'login', login_route, methods=['GET', 'POST'])
 
 # ---------------------------
@@ -231,7 +204,7 @@ def index():
                     return None
                 return float(val)
             
-            # Obtener coeficientes para la primera recta (requeridos)
+            # Primera recta: obligatoria
             a1 = get_val("a1")
             b1 = get_val("b1")
             c1 = get_val("c1")
@@ -239,26 +212,22 @@ def index():
                 flash("Ingrese los coeficientes de al menos la primera recta.")
                 return redirect(url_for('index'))
             
-            # Intentar obtener coeficientes para la segunda recta (opcionales)
+            # Segunda recta: se considera dual solo si se llenan los 3 campos; de lo contrario, modo simple
             a2 = get_val("a2")
             b2 = get_val("b2")
             c2 = get_val("c2")
-            
-            modo = "dual"
-            if a2 is None and b2 is None and c2 is None:
+            if a2 is not None and b2 is not None and c2 is not None:
+                modo = "dual"
+            else:
                 modo = "simple"
             
             if modo == "dual":
                 resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
-                # Calcular datos detallados de cada recta
                 datos1 = calcularDatosRecta(a1, b1, c1)
                 datos2 = calcularDatosRecta(a2, b2, c2)
-                # Conversión a forma pendiente-intersección
                 m1, b_inter1 = general_to_slope_intercept(a1, b1, c1)
                 m2, b_inter2 = general_to_slope_intercept(a2, b2, c2)
-                # Calcular ángulo entre rectas
                 angulo = angle_between_lines(m1, m2)
-                # Distancia del punto de intersección al origen
                 if resultado.get("punto"):
                     x_int, y_int = resultado["punto"]
                     dist = distance_between_points(0, 0, x_int, y_int)
@@ -266,7 +235,7 @@ def index():
                     dist = None
                 grafico = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
                 
-                # Comparaciones para mostrar datos decorados
+                # Comparaciones decoradas
                 pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
                 pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
                 if abs(pendiente1) > abs(pendiente2):
@@ -283,22 +252,6 @@ def index():
                 else:
                     comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
                 
-                # Guardar datos para exportar
-                session['export_data'] = {
-                    "recta1": {
-                        "pendiente": datos1["pendiente"] if datos1["pendiente"] is not None else "Vertical",
-                        "interseccionX": datos1["interseccionX"],
-                        "interseccionY": datos1["interseccionY"],
-                        "distanciaAlOrigen": datos1["distanciaAlOrigen"]
-                    },
-                    "recta2": {
-                        "pendiente": datos2["pendiente"] if datos2["pendiente"] is not None else "Vertical",
-                        "interseccionX": datos2["interseccionX"],
-                        "interseccionY": datos2["interseccionY"],
-                        "distanciaAlOrigen": datos2["distanciaAlOrigen"]
-                    }
-                }
-                
                 return render_template("resultado.html", 
                                        resultado=resultado, 
                                        grafico=grafico, 
@@ -313,10 +266,11 @@ def index():
                 y_inter = -c1 / b1 if abs(b1) > 1e-8 else None
                 grafico = graficarEcuacionSimple(a1, b1, c1)
                 resultado = {"tipo": "simple", "pendiente": m, "interseccion": (x_inter, y_inter)}
+                datos1 = calcularDatosRecta(a1, b1, c1)
                 return render_template("resultado.html", 
                                        resultado=resultado, 
                                        grafico=grafico,
-                                       datos1=calcularDatosRecta(a1, b1, c1))
+                                       datos1=datos1)
         except Exception as e:
             flash("Error: " + str(e))
             return redirect(url_for('index'))
