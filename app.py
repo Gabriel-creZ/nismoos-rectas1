@@ -1,44 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import math
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")  # Usar backend no interactivo
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import io
+import base64
 
 app = Flask(__name__)
+app.secret_key = 'mi_clave_secreta'  # Cambia esta clave por una más segura
 
-# Funciones de cálculo (refactorizadas desde tu código original)
-
-def procedimientoCramer(a1, b1, c1, a2, b2, c2):
-    texto = []
-    texto.append("1) Reescribimos las ecuaciones en la forma: ")
-    texto.append(f"   {a1}x + {b1}y = {-c1}")
-    texto.append(f"   {a2}x + {b2}y = {-c2}")
-    
-    texto.append("2) Calculamos el determinante principal:")
-    det = a1 * b2 - a2 * b1
-    texto.append(f"   det = {a1}*{b2} - {a2}*{b1} = {det}")
-    
-    if abs(det) < 1e-14:
-        texto.append("   Como el determinante es 0, las rectas son paralelas o coincidentes.")
-    else:
-        texto.append("3) Calculamos los determinantes para x e y:")
-        det_x = (-c1)*b2 - (-c2)*b1
-        det_y = a1*(-c2) - a2*(-c1)
-        texto.append(f"   det_x = (-c1)*b2 - (-c2)*b1 = {det_x}")
-        texto.append(f"   det_y = a1*(-c2) - a2*(-c1) = {det_y}")
-        x_sol = det_x / det
-        y_sol = det_y / det
-        texto.append("4) Hallamos las soluciones:")
-        texto.append(f"   x = {x_sol}")
-        texto.append(f"   y = {y_sol}")
-    return "<br>".join(texto)
+# --- Funciones de cálculo y graficado ---
 
 def resolverSistema(a1, b1, c1, a2, b2, c2):
     det = a1 * b2 - a2 * b1
     resultado = {"det": det, "tipo": None, "punto": None}
-    
     if abs(det) < 1e-14:
         proporcion = None
         if abs(a2) > 1e-14:
@@ -78,7 +54,7 @@ def calcularDatosRecta(a, b, c):
         datos["anguloConEjeX"] = 90.0
     else:
         datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
-    datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a*a + b*b)
+    datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b)
     return datos
 
 def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
@@ -87,7 +63,7 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     
     def get_y(a, b, c, x_array):
         return None if abs(b) < 1e-14 else (-a * x_array - c) / b
-
+    
     y1 = get_y(a1, b1, c1, x_vals)
     if y1 is not None:
         plt.plot(x_vals, y1, label=f"R1: {a1}x + {b1}y + {c1} = 0", color="darkorange")
@@ -110,25 +86,48 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     plt.axvline(0, color='black', linewidth=0.5)
     plt.xlabel("Eje X")
     plt.ylabel("Eje Y")
-    plt.title("Gráfica de las rectas")
+    plt.title("Gráfica de las Rectas")
     plt.legend()
     plt.grid(True)
     plt.axis('equal')
     
-    # Guardamos la gráfica en un objeto BytesIO
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)
     plt.close()
     return buf
 
-# Rutas de la aplicación web
+# --- Rutas para el login y autenticación ---
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        # Validación simple: ajusta las credenciales según tus necesidades
+        if username == "amrd" and password == "password":
+            session["logged_in"] = True
+            return redirect(url_for("index"))
+        else:
+            flash("Credenciales inválidas, intente de nuevo.")
+            return render_template("login.html")
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    flash("Sesión cerrada correctamente.")
+    return redirect(url_for("login"))
+
+# --- Ruta principal (index) ---
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    
     if request.method == "POST":
         try:
-            # Obtenemos los coeficientes del formulario
             a1 = float(request.form["a1"])
             b1 = float(request.form["b1"])
             c1 = float(request.form["c1"])
@@ -138,26 +137,39 @@ def index():
         except ValueError:
             return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
         
-        # Procesamos el sistema
-        proc_texto = procedimientoCramer(a1, b1, c1, a2, b2, c2)
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
         datos1 = calcularDatosRecta(a1, b1, c1)
         datos2 = calcularDatosRecta(a2, b2, c2)
         
-        # Generamos la gráfica y guardamos en sesión temporalmente
-        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
-        # Convertimos la imagen a base64 para incrustarla en el HTML
-        import base64
-        grafico_base64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        # Comparación de pendientes e inclinaciones
+        pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
+        pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+        if abs(pendiente1) > abs(pendiente2):
+            comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
+        elif abs(pendiente2) > abs(pendiente1):
+            comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+        else:
+            comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
         
-        return render_template("resultado.html",
-                               proc_texto=proc_texto,
+        ang1 = datos1["anguloConEjeX"]
+        ang2 = datos2["anguloConEjeX"]
+        if ang1 > ang2:
+            comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
+        elif ang2 > ang1:
+            comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
+        else:
+            comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
+        
+        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
+        grafico = base64.b64encode(buf.getvalue()).decode("ascii")
+        
+        return render_template("result.html",
                                resultado=resultado,
                                datos1=datos1,
                                datos2=datos2,
-                               a1=a1, b1=b1, c1=c1,
-                               a2=a2, b2=b2, c2=c2,
-                               grafico=grafico_base64)
+                               comp_pendiente=comp_pendiente,
+                               comp_inclinacion=comp_inclinacion,
+                               grafico=grafico)
     return render_template("index.html")
 
 if __name__ == "__main__":
