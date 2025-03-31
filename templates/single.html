@@ -23,7 +23,6 @@
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
     </header>
-    
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="error-message">
@@ -33,7 +32,6 @@
         </div>
       {% endif %}
     {% endwith %}
-    
     <div class="content">
       <div class="form-container">
         <h2>Ingresar Coeficientes</h2>
@@ -53,7 +51,6 @@
             <label for="c">c:</label>
             <input type="text" name="c" id="c" placeholder="Valor de c" required>
           </div>
-          <!-- Rango opcional -->
           <fieldset>
             <legend>Rango de la gráfica (opcional):</legend>
             <div class="form-group">

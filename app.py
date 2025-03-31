@@ -25,16 +25,16 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 def enviar_reporte_error(mensaje):
     """
     Envía un correo electrónico con el reporte de error.
-    Reemplaza los datos SMTP con tus credenciales reales.
+    Configura los datos SMTP con tus credenciales reales.
     """
     destinatario = "castilloreyesgabriel4@gmail.com"  # Donde se recibirán los reportes
     asunto = "Reporte de Error - Instant Math Solver"
     
-    # Configuración SMTP (reemplaza con tus datos)
-    smtp_server = "TU_SMTP_SERVER"   # Ej: "smtp.gmail.com"
-    smtp_port = 587                  # Puerto SMTP
-    correo_origen = "TU_CORREO"      # Ej: "tu_correo@gmail.com"
-    password = "TU_PASSWORD"         # Contraseña o "Contraseña de Aplicación"
+    # Configuración SMTP (reemplaza estos datos por los tuyos)
+    smtp_server = "castilloreyesgabriel4@gmail.com"   # Ej: "smtp.gmail.com"
+    smtp_port = 465                  # Puerto SMTP
+    correo_origen = "castilloreyesgabriel4@gmail.com"      # Ej: "tu_correo@gmail.com"
+    password = "fjgf igtf rxmq usxc"         # Contraseña o "Contraseña de Aplicación"
     
     msg = MIMEText(mensaje)
     msg["Subject"] = asunto
@@ -187,8 +187,8 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
 
 def generar_pdf_resultado(textos):
     """
-    Genera un PDF con los textos indicados (lista de cadenas).
-    Devuelve un objeto BytesIO con el PDF generado.
+    Genera un PDF con las líneas de texto en la lista 'textos'.
+    Devuelve un objeto BytesIO con el PDF generado o None en caso de error.
     """
     pdf = FPDF()
     try:
@@ -215,7 +215,32 @@ def generar_pdf_resultado(textos):
     return mem
 
 # -------------------------------------------------------------------------
-# Rutas para resolver dos ecuaciones
+# Rutas de la aplicación
+# -------------------------------------------------------------------------
+
+# Para evitar errores en peticiones HEAD, se incluye el método HEAD en estas rutas.
+@app.route("/login", methods=["GET", "POST", "HEAD"], endpoint="login")
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == "alumno" and password == "amrd":
+            session["logged_in"] = True
+            session["user"] = username
+            return redirect(url_for("index"))
+        else:
+            flash("Usuario o contraseña incorrectos, intente de nuevo.")
+            return render_template("login.html")
+    return render_template("login.html")
+
+@app.route("/logout", methods=["GET", "HEAD"], endpoint="logout")
+def logout():
+    session.pop("logged_in", None)
+    flash("Sesión cerrada correctamente.")
+    return redirect(url_for("login"))
+
+# -------------------------------------------------------------------------
+# Resolver dos ecuaciones
 # -------------------------------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -273,7 +298,7 @@ def index():
         if resultado["tipo"] == "interseccion" and resultado["punto"]:
             distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
         
-        # Guardar datos en sesión (para poder exportar PDF si se desea)
+        # Guardar datos en sesión para exportar PDF
         session["export_data"] = {
             "a1": a1, "b1": b1, "c1": c1,
             "a2": a2, "b2": b2, "c2": c2,
@@ -298,7 +323,7 @@ def index():
     return render_template("index.html")
 
 # -------------------------------------------------------------------------
-# Rutas para resolver una sola ecuación
+# Resolver una sola ecuación
 # -------------------------------------------------------------------------
 @app.route("/single", methods=["GET", "POST"])
 def single():
@@ -335,7 +360,7 @@ def single():
     return render_template("single.html")
 
 # -------------------------------------------------------------------------
-# Ruta para exportar PDF (para 2 ecuaciones)
+# Exportar PDF para 2 ecuaciones
 # -------------------------------------------------------------------------
 @app.route("/export/pdf")
 def export_pdf():
@@ -365,7 +390,7 @@ def export_pdf():
     return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados.pdf")
 
 # -------------------------------------------------------------------------
-# Ruta para exportar PDF (para ecuación única)
+# Exportar PDF para ecuación única
 # -------------------------------------------------------------------------
 @app.route("/export_single/pdf")
 def export_pdf_single():
@@ -387,7 +412,7 @@ def export_pdf_single():
     return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados_unica.pdf")
 
 # -------------------------------------------------------------------------
-# Ruta para Reporte de Errores
+# Reporte de Errores
 # -------------------------------------------------------------------------
 @app.route("/error_report", methods=["GET", "POST"])
 def error_report():
@@ -402,7 +427,7 @@ def error_report():
     return render_template("error_report.html")
 
 # -------------------------------------------------------------------------
-# Ruta para Donaciones
+# Donaciones
 # -------------------------------------------------------------------------
 @app.route("/donations")
 def donations():

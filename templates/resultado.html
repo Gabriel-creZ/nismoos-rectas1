@@ -23,7 +23,6 @@
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
     </header>
-    
     <div class="content">
       {% if resultado.tipo == "interseccion" and resultado.punto %}
         <h2 class="results-title">✅ Punto de intersección: ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</h2>
@@ -34,7 +33,6 @@
       {% else %}
         <h2 class="results-title">❓ Caso indefinido.</h2>
       {% endif %}
-      
       <div class="result-item">
         <h3>=== Datos de la Recta 1 ===</h3>
         <p>✴️ Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
@@ -43,7 +41,6 @@
         <p>📐 Ángulo con eje X: {{ datos1.anguloConEjeX }}°</p>
         <p>📏 Distancia al origen: {{ datos1.distanciaAlOrigen }}</p>
       </div>
-      
       <div class="result-item">
         <h3>=== Datos de la Recta 2 ===</h3>
         <p>✴️ Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
@@ -52,7 +49,6 @@
         <p>📐 Ángulo con eje X: {{ datos2.anguloConEjeX }}°</p>
         <p>📏 Distancia al origen: {{ datos2.distanciaAlOrigen }}</p>
       </div>
-      
       <div class="result-item">
         <p>{{ comp_pendiente }}</p>
         <p>{{ comp_inclinacion }}</p>
@@ -61,21 +57,17 @@
           <p>📏 Distancia intersección - origen: {{ distancia_interseccion_origen }}</p>
         {% endif %}
       </div>
-      
       <div class="result-item">
         <h3><i class="fas fa-chart-pie"></i> Gráfica de las Rectas</h3>
         <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas" class="triangle-image">
       </div>
-      
       <div class="result-item">
         <a href="{{ url_for('export_pdf') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
       </div>
-      
       <div class="result-item">
         <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
       </div>
     </div>
-    
     <div class="footer">
       <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
