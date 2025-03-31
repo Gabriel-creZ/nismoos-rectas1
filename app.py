@@ -66,22 +66,14 @@ def calcularDatosRecta(a, b, c):
 
 # Nueva función: Convertir de forma general a pendiente-intersección
 def general_to_slope(a, b, c):
-    """
-    Convierte la ecuación general Ax + By + C = 0 a la forma pendiente-intersección (y = mx + k).
-    Retorna (m, k). Si la recta es vertical, retorna (None, None).
-    """
     if abs(b) < 1e-14:
-        return None, None  # Recta vertical, no se puede expresar en forma y = mx + k
+        return None, None  # Recta vertical
     m = -a / b
     k = -c / b
     return m, k
 
 # Nueva función: Calcular la distancia entre dos puntos
 def distance_points(p1, p2):
-    """
-    Calcula la distancia euclidiana entre dos puntos p1 y p2.
-    Cada punto es una tupla (x, y).
-    """
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min=-10, y_max=10):
@@ -132,11 +124,39 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
     plt.close()
     return buf
 
-# Nueva función: Calcular el ángulo entre dos rectas usando sus pendientes o ángulos con el eje X
+# Nueva función para graficar una sola recta
+def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
+    plt.figure(figsize=(7, 7))
+    x_vals = np.linspace(x_min, x_max, 400)
+    def get_y(a, b, c, x_array):
+         return None if abs(b) < 1e-14 else (-a * x_array - c) / b
+    y = get_y(a, b, c, x_vals)
+    if y is not None:
+         plt.plot(x_vals, y, label=f"{a}x + {b}y + {c} = 0", color="purple")
+    else:
+         try:
+             x_const = -c / a
+             plt.axvline(x_const, color="purple", label=f"x = {x_const:.2f}")
+         except ZeroDivisionError:
+             pass
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    plt.xlabel("Eje X")
+    plt.ylabel("Eje Y")
+    plt.title("Gráfica de la Recta")
+    plt.legend(loc="upper right")
+    plt.grid(True)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    plt.gca().set_aspect("equal", adjustable="box")
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    plt.close()
+    return buf
+
+# Nueva función: Calcular el ángulo entre dos rectas
 def angle_between_lines(ang1, ang2):
-    """
-    Calcula el ángulo mínimo entre dos rectas dados sus ángulos con el eje X.
-    """
     diff = abs(ang1 - ang2)
     if diff > 90:
         diff = 180 - diff
@@ -165,7 +185,7 @@ def logout():
     flash("Sesión cerrada correctamente.")
     return redirect(url_for("login"))
 
-# --- Ruta principal (index) ---
+# --- Ruta principal para resolver dos ecuaciones ---
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -252,7 +272,46 @@ def index():
                                grafico=grafico)
     return render_template("index.html")
 
-# Ruta para exportar resultados en CSV
+# --- Ruta para resolver una sola ecuación ---
+
+@app.route("/single", methods=["GET", "POST"])
+def single():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    
+    if request.method == "POST":
+        try:
+            a = float(request.form["a"])
+            b = float(request.form["b"])
+            c = float(request.form["c"])
+        except ValueError:
+            return render_template("single.html", error="Por favor ingresa valores numéricos válidos.")
+        
+        # Manejo opcional del rango de la gráfica
+        try:
+            x_min = float(request.form.get("x_min", -10))
+            x_max = float(request.form.get("x_max", 10))
+            y_min = float(request.form.get("y_min", -10))
+            y_max = float(request.form.get("y_max", 10))
+        except ValueError:
+            x_min, x_max, y_min, y_max = -10, 10, -10, 10
+        
+        datos = calcularDatosRecta(a, b, c)
+        buf = graficarRectaUnica(a, b, c, x_min, x_max, y_min, y_max)
+        grafico = base64.b64encode(buf.getvalue()).decode("ascii")
+        
+        # Guardamos datos para exportar
+        session["export_data_single"] = {
+            "a": a, "b": b, "c": c,
+            "datos": datos,
+            "grafico": grafico,
+            "x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max
+        }
+        
+        return render_template("single.html", datos=datos, grafico=grafico)
+    return render_template("single.html")
+
+# Rutas para exportar resultados (CSV y PDF) para dos ecuaciones
 @app.route("/export/csv")
 def export_csv():
     export_data = session.get("export_data")
@@ -260,11 +319,8 @@ def export_csv():
         flash("No hay datos para exportar.")
         return redirect(url_for("index"))
     
-    # Creamos un CSV en memoria
     si = io.StringIO()
     cw = csv.writer(si)
-    
-    # Escribir encabezados y datos
     cw.writerow(["Parámetro", "Valor"])
     cw.writerow(["a1", export_data["a1"]])
     cw.writerow(["b1", export_data["b1"]])
@@ -289,7 +345,6 @@ def export_csv():
     mem.seek(0)
     return send_file(mem, mimetype="text/csv", as_attachment=True, attachment_filename="resultados.csv")
 
-# Ruta para exportar resultados en PDF
 @app.route("/export/pdf")
 def export_pdf():
     export_data = session.get("export_data")
@@ -302,28 +357,20 @@ def export_pdf():
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "Resultados - Resolución de Rectas", ln=True, align="C")
     pdf.ln(10)
-    
     pdf.set_font("Arial", size=12)
-    # Datos de entrada
     pdf.cell(0, 10, f"Recta 1: {export_data['a1']}x + {export_data['b1']}y + {export_data['c1']} = 0", ln=True)
     pdf.cell(0, 10, f"Recta 2: {export_data['a2']}x + {export_data['b2']}y + {export_data['c2']} = 0", ln=True)
     pdf.ln(5)
-    
-    # Resultado del sistema
     pdf.cell(0, 10, f"Tipo de solución: {export_data['resultado']['tipo']}", ln=True)
     if export_data["resultado"]["punto"]:
         pdf.cell(0, 10, f"Punto de intersección: {export_data['resultado']['punto']}", ln=True)
     pdf.ln(5)
-    
-    # Datos de cada recta
     pdf.cell(0, 10, f"Recta 1 - Pendiente: {export_data['datos1']['pendiente']}, Ángulo: {export_data['datos1']['anguloConEjeX']}°", ln=True)
     pdf.cell(0, 10, f"Recta 2 - Pendiente: {export_data['datos2']['pendiente']}, Ángulo: {export_data['datos2']['anguloConEjeX']}°", ln=True)
     pdf.ln(5)
-    
     pdf.cell(0, 10, f"Ángulo entre rectas: {export_data['angulo_entre_rectas']}°", ln=True)
     if export_data["distancia_interseccion_origen"] is not None:
         pdf.cell(0, 10, f"Distancia entre la intersección y el origen: {export_data['distancia_interseccion_origen']}", ln=True)
-    
     pdf.ln(10)
     pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
     
@@ -331,6 +378,70 @@ def export_pdf():
     pdf.output(mem)
     mem.seek(0)
     return send_file(mem, mimetype="application/pdf", as_attachment=True, attachment_filename="resultados.pdf")
+
+# Rutas para exportar resultados de la ecuación única
+@app.route("/export_single/csv")
+def export_csv_single():
+    export_data = session.get("export_data_single")
+    if not export_data:
+        flash("No hay datos para exportar.")
+        return redirect(url_for("single"))
+    
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerow(["Parámetro", "Valor"])
+    cw.writerow(["a", export_data["a"]])
+    cw.writerow(["b", export_data["b"]])
+    cw.writerow(["c", export_data["c"]])
+    cw.writerow(["Pendiente", export_data["datos"]["pendiente"]])
+    cw.writerow(["Ángulo con eje X (°)", export_data["datos"]["anguloConEjeX"]])
+    cw.writerow(["Distancia al origen", export_data["datos"]["distanciaAlOrigen"]])
+    
+    si.seek(0)
+    mem = io.BytesIO()
+    mem.write(si.getvalue().encode("utf-8"))
+    mem.seek(0)
+    return send_file(mem, mimetype="text/csv", as_attachment=True, attachment_filename="resultados_unica.csv")
+
+@app.route("/export_single/pdf")
+def export_pdf_single():
+    export_data = session.get("export_data_single")
+    if not export_data:
+        flash("No hay datos para exportar.")
+        return redirect(url_for("single"))
+    
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Resultados - Ecuación Única", ln=True, align="C")
+    pdf.ln(10)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"Ecuación: {export_data['a']}x + {export_data['b']}y + {export_data['c']} = 0", ln=True)
+    pdf.ln(5)
+    pdf.cell(0, 10, f"Pendiente: {export_data['datos']['pendiente']}", ln=True)
+    pdf.cell(0, 10, f"Ángulo con eje X (°): {export_data['datos']['anguloConEjeX']}", ln=True)
+    pdf.cell(0, 10, f"Distancia al origen: {export_data['datos']['distanciaAlOrigen']}", ln=True)
+    pdf.ln(10)
+    pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
+    
+    mem = io.BytesIO()
+    pdf.output(mem)
+    mem.seek(0)
+    return send_file(mem, mimetype="application/pdf", as_attachment=True, attachment_filename="resultados_unica.pdf")
+
+# --- Rutas para Reporte de Errores y Donaciones ---
+
+@app.route("/error_report", methods=["GET", "POST"])
+def error_report():
+    if request.method == "POST":
+        # Aquí se procesaría el reporte de error (por ejemplo, guardarlo o enviarlo por email)
+        flash("¡Gracias por reportar el error!")
+        return redirect(url_for("index"))
+    return render_template("error_report.html")
+
+@app.route("/donations")
+def donations():
+    return render_template("donations.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

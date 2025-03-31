@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instant Math Solver: Resolución de Rectas</title>
+  <title>Ecuación Única - Instant Math Solver</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -14,8 +14,7 @@
       <img src="{{ url_for('static', filename='images/label-image.png') }}" alt="Logo Instant Math Solver" class="label-image">
     </a>
     <header class="header">
-      <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
-      <p class="creator">By: <em>gabriel_cre</em></p>
+      <h1>Ecuación Única</h1>
       <!-- Menú de navegación -->
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
@@ -34,37 +33,22 @@
     
     <div class="content">
       <div class="form-container">
-        <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Coeficientes para 2 Ecuaciones</h2>
+        <h2>Ingresar Coeficientes</h2>
         <div class="instruction">
-          Ingresa los coeficientes para cada recta en la forma a*x + b*y + c = 0.<br>
-          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
+          Ingresa los coeficientes de la ecuación en la forma a*x + b*y + c = 0.
         </div>
         <form method="POST">
-          <!-- Campos para la primera ecuación -->
           <div class="form-group">
-            <label for="a1">a₁:</label>
-            <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
+            <label for="a">a:</label>
+            <input type="text" name="a" id="a" placeholder="Valor de a" required>
           </div>
           <div class="form-group">
-            <label for="b1">b₁:</label>
-            <input type="text" name="b1" id="b1" placeholder="Valor de b₁" required>
+            <label for="b">b:</label>
+            <input type="text" name="b" id="b" placeholder="Valor de b" required>
           </div>
           <div class="form-group">
-            <label for="c1">c₁:</label>
-            <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
-          </div>
-          <!-- Campos para la segunda ecuación -->
-          <div class="form-group">
-            <label for="a2">a₂:</label>
-            <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
-          </div>
-          <div class="form-group">
-            <label for="b2">b₂:</label>
-            <input type="text" name="b2" id="b2" placeholder="Valor de b₂" required>
-          </div>
-          <div class="form-group">
-            <label for="c2">c₂:</label>
-            <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
+            <label for="c">c:</label>
+            <input type="text" name="c" id="c" placeholder="Valor de c" required>
           </div>
           <!-- Rango opcional para la gráfica -->
           <fieldset>
@@ -86,11 +70,31 @@
               <input type="text" name="y_max" id="y_max" placeholder="10">
             </div>
           </fieldset>
-          <button type="submit" class="btn">
-            <i class="fas fa-calculator"></i> Calcular
-          </button>
+          <button type="submit" class="btn"><i class="fas fa-calculator"></i> Calcular</button>
         </form>
       </div>
+      
+      {% if datos %}
+      <div class="result-item">
+        <h3>Resultados</h3>
+        <p>✴️ Pendiente: {{ datos.pendiente if datos.pendiente is not none else "Vertical" }}</p>
+        <p>📐 Ángulo con eje X: {{ datos.anguloConEjeX }}°</p>
+        <p>📏 Distancia al origen: {{ datos.distanciaAlOrigen }}</p>
+      </div>
+      <div class="result-item">
+        <h3>Gráfica de la Recta</h3>
+        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de la recta" class="triangle-image">
+      </div>
+      <div class="result-item">
+        <a href="{{ url_for('export_csv_single') }}" class="btn"><i class="fas fa-file-csv"></i> Exportar CSV</a>
+        <a href="{{ url_for('export_pdf_single') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
+      </div>
+      {% endif %}
+      
+    </div>
+    
+    <div class="result-item">
+      <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Regresar</a>
     </div>
     
     <div class="footer">

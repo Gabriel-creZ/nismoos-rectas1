@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donaciones - Instant Math Solver</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Donaciones</h1>
+      <nav>
+        <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
+        <a href="{{ url_for('single') }}">Ecuación Única</a> |
+        <a href="{{ url_for('error_report') }}">Reportar Error</a> |
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+      </nav>
+    </header>
+    
+    <div class="content">
+      <div class="form-container">
+        <h2>Apoya el Proyecto</h2>
+        <p>
+          Si te gusta esta herramienta y deseas apoyar su desarrollo, ¡considera hacer una donación!
+        </p>
+        <p>
+          Puedes donar a través de:
+        </p>
+        <ul>
+          <li><strong>PayPal:</strong> paypal@ejemplo.com</li>
+          <li><strong>Bitcoin:</strong> 1A2b3C4d5E6f7G8h9I0j</li>
+        </ul>
+        <p>
+          ¡Gracias por tu apoyo!
+        </p>
+        <a href="https://www.paypal.com/donate?hosted_button_id=XXXXXX" target="_blank" class="btn"><i class="fas fa-donate"></i> Donar con PayPal</a>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
+    </div>
+  </div>
+</body>
+</html>
