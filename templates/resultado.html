@@ -10,77 +10,74 @@
 </head>
 <body>
   <div class="container">
-    <!-- La imagen label-image es un enlace -->
     <a href="https://bachantoniomadna.milaulas.com" target="_blank" class="label-image-container">
       <img src="{{ url_for('static', filename='images/label-image.png') }}" alt="Logo Instant Math Solver" class="label-image">
     </a>
     <header class="header">
-      <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
-      <p class="creator">By: <em>gabriel_cre</em></p>
-      <div class="equation-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
-      </div>
+      <h1>Resultados</h1>
+      <nav>
+        <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
+        <a href="{{ url_for('single') }}">Ecuación Única</a> |
+        <a href="{{ url_for('error_report') }}">Reportar Error</a> |
+        <a href="{{ url_for('donations') }}">Donaciones</a> |
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+      </nav>
     </header>
     
     <div class="content">
-      <div class="results-container">
-        {% if resultado.tipo == "interseccion" and resultado.punto %}
-          <h2 class="results-title">✅ Punto de intersección: (x, y) = ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</h2>
-        {% elif resultado.tipo == "paralelas" %}
-          <h2 class="results-title">❌ Las rectas son paralelas (no existe punto de intersección).</h2>
-        {% elif resultado.tipo == "coincidentes" %}
-          <h2 class="results-title">⭐ Las rectas son coincidentes (infinitos puntos de intersección).</h2>
-        {% else %}
-          <h2 class="results-title">❓ Caso indefinido.</h2>
+      {% if resultado.tipo == "interseccion" and resultado.punto %}
+        <h2 class="results-title">✅ Punto de intersección: ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</h2>
+      {% elif resultado.tipo == "paralelas" %}
+        <h2 class="results-title">❌ Las rectas son paralelas (no existe intersección).</h2>
+      {% elif resultado.tipo == "coincidentes" %}
+        <h2 class="results-title">⭐ Las rectas son coincidentes (infinitos puntos de intersección).</h2>
+      {% else %}
+        <h2 class="results-title">❓ Caso indefinido.</h2>
+      {% endif %}
+      
+      <div class="result-item">
+        <h3>=== Datos de la Recta 1 ===</h3>
+        <p>✴️ Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
+        <p>🔸 Intersección con eje X: {{ datos1.interseccionX }}</p>
+        <p>🔹 Intersección con eje Y: {{ datos1.interseccionY }}</p>
+        <p>📐 Ángulo con eje X: {{ datos1.anguloConEjeX }}°</p>
+        <p>📏 Distancia al origen: {{ datos1.distanciaAlOrigen }}</p>
+      </div>
+      
+      <div class="result-item">
+        <h3>=== Datos de la Recta 2 ===</h3>
+        <p>✴️ Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
+        <p>🔸 Intersección con eje X: {{ datos2.interseccionX }}</p>
+        <p>🔹 Intersección con eje Y: {{ datos2.interseccionY }}</p>
+        <p>📐 Ángulo con eje X: {{ datos2.anguloConEjeX }}°</p>
+        <p>📏 Distancia al origen: {{ datos2.distanciaAlOrigen }}</p>
+      </div>
+      
+      <div class="result-item">
+        <p>{{ comp_pendiente }}</p>
+        <p>{{ comp_inclinacion }}</p>
+        <p>📊 Ángulo entre rectas: {{ angulo_entre_rectas }}°</p>
+        {% if distancia_interseccion_origen %}
+          <p>📏 Distancia intersección - origen: {{ distancia_interseccion_origen }}</p>
         {% endif %}
-        
-        <div class="result-item">
-          <h3>=== Datos de la Recta 1 ===</h3>
-          <p>✴️  Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
-          <p>🔸 Absisa (Intersección con eje X): {{ datos1.interseccionX }}</p>
-          <p>🔹 Ordenada (Intersección con eje Y): {{ datos1.interseccionY }}</p>
-          <p>📐 Inclinación (ángulo con eje X): {{ datos1.anguloConEjeX }}°</p>
-          <p>📏 Distancia desde el origen: {{ datos1.distanciaAlOrigen }}</p>
-        </div>
-        
-        <div class="result-item">
-          <h3>=== Datos de la Recta 2 ===</h3>
-          <p>✴️  Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
-          <p>🔸 Absisa (Intersección con eje X): {{ datos2.interseccionX }}</p>
-          <p>🔹 Ordenada (Intersección con eje Y): {{ datos2.interseccionY }}</p>
-          <p>📐 Inclinación (ángulo con eje X): {{ datos2.anguloConEjeX }}°</p>
-          <p>📏 Distancia desde el origen: {{ datos2.distanciaAlOrigen }}</p>
-        </div>
-        
-        <div class="result-item">
-          <p>{{ comp_pendiente }}</p>
-          <p>{{ comp_inclinacion }}</p>
-          <p>📊 Ángulo entre rectas: {{ angulo_entre_rectas }}°</p>
-          {% if distancia_interseccion_origen %}
-            <p>📏 Distancia entre la intersección y el origen: {{ distancia_interseccion_origen }}</p>
-          {% endif %}
-        </div>
-        
-        <div class="result-item">
-          <h3><i class="fas fa-chart-pie"></i> Gráfica de las Rectas</h3>
-          <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas" class="triangle-image">
-        </div>
-        
-        <div class="result-item">
-          <a href="{{ url_for('export_csv') }}" class="btn"><i class="fas fa-file-csv"></i> Exportar CSV</a>
-          <a href="{{ url_for('export_pdf') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
-        </div>
-        
-        <div class="result-item">
-          <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
-        </div>
+      </div>
+      
+      <div class="result-item">
+        <h3><i class="fas fa-chart-pie"></i> Gráfica de las Rectas</h3>
+        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas" class="triangle-image">
+      </div>
+      
+      <div class="result-item">
+        <a href="{{ url_for('export_pdf') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
+      </div>
+      
+      <div class="result-item">
+        <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
       </div>
     </div>
     
     <div class="footer">
-      <em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
   </div>
 </body>

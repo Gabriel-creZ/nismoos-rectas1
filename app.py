@@ -1,13 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import math
+import io
+import base64
+import smtplib
+from email.mime.text import MIMEText
+
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import io
-import base64
-import csv
-from fpdf import FPDF  # Para exportar a PDF
+
+from fpdf import FPDF
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 
 app = Flask(__name__)
 app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
@@ -16,8 +19,39 @@ app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
-# --- Funciones de cálculo y graficado ---
+# -------------------------------------------------------------------------
+# Función para enviar reporte de error por correo
+# -------------------------------------------------------------------------
+def enviar_reporte_error(mensaje):
+    """
+    Envía un correo electrónico con el reporte de error.
+    Reemplaza los datos SMTP con tus credenciales reales.
+    """
+    destinatario = "castilloreyesgabriel4@gmail.com"  # Donde se recibirán los reportes
+    asunto = "Reporte de Error - Instant Math Solver"
+    
+    # Configuración SMTP (reemplaza con tus datos)
+    smtp_server = "TU_SMTP_SERVER"   # Ej: "smtp.gmail.com"
+    smtp_port = 587                  # Puerto SMTP
+    correo_origen = "TU_CORREO"      # Ej: "tu_correo@gmail.com"
+    password = "TU_PASSWORD"         # Contraseña o "Contraseña de Aplicación"
+    
+    msg = MIMEText(mensaje)
+    msg["Subject"] = asunto
+    msg["From"] = correo_origen
+    msg["To"] = destinatario
+    
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(correo_origen, password)
+            server.sendmail(correo_origen, destinatario, msg.as_string())
+    except Exception as e:
+        print(f"Error al enviar reporte: {e}")
 
+# -------------------------------------------------------------------------
+# Funciones de cálculo y graficado
+# -------------------------------------------------------------------------
 def resolverSistema(a1, b1, c1, a2, b2, c2):
     det = a1 * b2 - a2 * b1
     resultado = {"det": det, "tipo": None, "punto": None}
@@ -60,21 +94,17 @@ def calcularDatosRecta(a, b, c):
         datos["anguloConEjeX"] = 90.0
     else:
         datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
-    # Distancia desde el origen a la recta
     datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b)
     return datos
 
-# Nueva función: Convertir de forma general a pendiente-intersección
-def general_to_slope(a, b, c):
-    if abs(b) < 1e-14:
-        return None, None  # Recta vertical
-    m = -a / b
-    k = -c / b
-    return m, k
-
-# Nueva función: Calcular la distancia entre dos puntos
 def distance_points(p1, p2):
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+def angle_between_lines(ang1, ang2):
+    diff = abs(ang1 - ang2)
+    if diff > 90:
+        diff = 180 - diff
+    return diff
 
 def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.figure(figsize=(7, 7))
@@ -124,10 +154,10 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
     plt.close()
     return buf
 
-# Nueva función para graficar una sola recta
 def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.figure(figsize=(7, 7))
     x_vals = np.linspace(x_min, x_max, 400)
+    
     def get_y(a, b, c, x_array):
          return None if abs(b) < 1e-14 else (-a * x_array - c) / b
     y = get_y(a, b, c, x_vals)
@@ -155,38 +185,38 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.close()
     return buf
 
-# Nueva función: Calcular el ángulo entre dos rectas
-def angle_between_lines(ang1, ang2):
-    diff = abs(ang1 - ang2)
-    if diff > 90:
-        diff = 180 - diff
-    return diff
+def generar_pdf_resultado(textos):
+    """
+    Genera un PDF con los textos indicados (lista de cadenas).
+    Devuelve un objeto BytesIO con el PDF generado.
+    """
+    pdf = FPDF()
+    try:
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, "Resultados - Instant Math Solver", ln=True, align="C")
+        pdf.ln(10)
+        pdf.set_font("Arial", size=12)
+        for linea in textos:
+            pdf.cell(0, 10, linea, ln=True)
+        pdf.ln(10)
+        pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
+    except Exception as e:
+        print(f"Error al generar PDF: {e}")
+        return None
 
-# --- Rutas para login y autenticación ---
+    mem = io.BytesIO()
+    try:
+        pdf.output(mem)
+    except Exception as e:
+        print(f"Error al escribir PDF: {e}")
+        return None
+    mem.seek(0)
+    return mem
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        # Validación con usuario "alumno" y contraseña "amrd"
-        if username == "alumno" and password == "amrd":
-            session["logged_in"] = True
-            session["user"] = username
-            return redirect(url_for("index"))
-        else:
-            flash("Usuario o contraseña incorrectos, intente de nuevo.")
-            return render_template("login.html")
-    return render_template("login.html")
-
-@app.route("/logout")
-def logout():
-    session.pop("logged_in", None)
-    flash("Sesión cerrada correctamente.")
-    return redirect(url_for("login"))
-
-# --- Ruta principal para resolver dos ecuaciones ---
-
+# -------------------------------------------------------------------------
+# Rutas para resolver dos ecuaciones
+# -------------------------------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if not session.get("logged_in"):
@@ -201,9 +231,9 @@ def index():
             b2 = float(request.form["b2"])
             c2 = float(request.form["c2"])
         except ValueError:
-            return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
+            flash("Por favor ingresa valores numéricos válidos.")
+            return render_template("index.html")
         
-        # Manejo opcional del rango de la gráfica
         try:
             x_min = float(request.form.get("x_min", -10))
             x_max = float(request.form.get("x_max", 10))
@@ -216,7 +246,6 @@ def index():
         datos1 = calcularDatosRecta(a1, b1, c1)
         datos2 = calcularDatosRecta(a2, b2, c2)
         
-        # Comparación de pendientes e inclinaciones
         pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
         pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
         if abs(pendiente1) > abs(pendiente2):
@@ -235,18 +264,16 @@ def index():
         else:
             comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
         
-        # Cálculo del ángulo entre las rectas
         angulo_entre_rectas = angle_between_lines(ang1, ang2)
         
         buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min, x_max, y_min, y_max)
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
-        # Si hay punto de intersección, calcular distancia entre él y el origen
         distancia_interseccion_origen = None
         if resultado["tipo"] == "interseccion" and resultado["punto"]:
             distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
         
-        # Guardamos los datos para exportar (CSV/PDF)
+        # Guardar datos en sesión (para poder exportar PDF si se desea)
         session["export_data"] = {
             "a1": a1, "b1": b1, "c1": c1,
             "a2": a2, "b2": b2, "c2": c2,
@@ -256,9 +283,7 @@ def index():
             "comp_pendiente": comp_pendiente,
             "comp_inclinacion": comp_inclinacion,
             "angulo_entre_rectas": angulo_entre_rectas,
-            "distancia_interseccion_origen": distancia_interseccion_origen,
-            "grafico": grafico,
-            "x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max
+            "distancia_interseccion_origen": distancia_interseccion_origen
         }
         
         return render_template("resultado.html",
@@ -272,8 +297,9 @@ def index():
                                grafico=grafico)
     return render_template("index.html")
 
-# --- Ruta para resolver una sola ecuación ---
-
+# -------------------------------------------------------------------------
+# Rutas para resolver una sola ecuación
+# -------------------------------------------------------------------------
 @app.route("/single", methods=["GET", "POST"])
 def single():
     if not session.get("logged_in"):
@@ -285,9 +311,9 @@ def single():
             b = float(request.form["b"])
             c = float(request.form["c"])
         except ValueError:
-            return render_template("single.html", error="Por favor ingresa valores numéricos válidos.")
+            flash("Por favor ingresa valores numéricos válidos.")
+            return render_template("single.html")
         
-        # Manejo opcional del rango de la gráfica
         try:
             x_min = float(request.form.get("x_min", -10))
             x_max = float(request.form.get("x_max", 10))
@@ -300,51 +326,17 @@ def single():
         buf = graficarRectaUnica(a, b, c, x_min, x_max, y_min, y_max)
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
-        # Guardamos datos para exportar
         session["export_data_single"] = {
             "a": a, "b": b, "c": c,
-            "datos": datos,
-            "grafico": grafico,
-            "x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max
+            "datos": datos
         }
         
         return render_template("single.html", datos=datos, grafico=grafico)
     return render_template("single.html")
 
-# Rutas para exportar resultados (CSV y PDF) para dos ecuaciones
-@app.route("/export/csv")
-def export_csv():
-    export_data = session.get("export_data")
-    if not export_data:
-        flash("No hay datos para exportar.")
-        return redirect(url_for("index"))
-    
-    si = io.StringIO()
-    cw = csv.writer(si)
-    cw.writerow(["Parámetro", "Valor"])
-    cw.writerow(["a1", export_data["a1"]])
-    cw.writerow(["b1", export_data["b1"]])
-    cw.writerow(["c1", export_data["c1"]])
-    cw.writerow(["a2", export_data["a2"]])
-    cw.writerow(["b2", export_data["b2"]])
-    cw.writerow(["c2", export_data["c2"]])
-    cw.writerow(["Tipo de solución", export_data["resultado"]["tipo"]])
-    if export_data["resultado"]["punto"]:
-        cw.writerow(["Punto de intersección", f"{export_data['resultado']['punto']}"])
-    cw.writerow(["Pendiente Recta 1", export_data["datos1"]["pendiente"]])
-    cw.writerow(["Pendiente Recta 2", export_data["datos2"]["pendiente"]])
-    cw.writerow(["Ángulo Recta 1 (°)", export_data["datos1"]["anguloConEjeX"]])
-    cw.writerow(["Ángulo Recta 2 (°)", export_data["datos2"]["anguloConEjeX"]])
-    cw.writerow(["Ángulo entre rectas (°)", export_data["angulo_entre_rectas"]])
-    if export_data["distancia_interseccion_origen"] is not None:
-        cw.writerow(["Distancia entre la intersección y el origen", export_data["distancia_interseccion_origen"]])
-    
-    si.seek(0)
-    mem = io.BytesIO()
-    mem.write(si.getvalue().encode("utf-8"))
-    mem.seek(0)
-    return send_file(mem, mimetype="text/csv", as_attachment=True, attachment_filename="resultados.csv")
-
+# -------------------------------------------------------------------------
+# Ruta para exportar PDF (para 2 ecuaciones)
+# -------------------------------------------------------------------------
 @app.route("/export/pdf")
 def export_pdf():
     export_data = session.get("export_data")
@@ -352,57 +344,29 @@ def export_pdf():
         flash("No hay datos para exportar.")
         return redirect(url_for("index"))
     
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Resultados - Resolución de Rectas", ln=True, align="C")
-    pdf.ln(10)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Recta 1: {export_data['a1']}x + {export_data['b1']}y + {export_data['c1']} = 0", ln=True)
-    pdf.cell(0, 10, f"Recta 2: {export_data['a2']}x + {export_data['b2']}y + {export_data['c2']} = 0", ln=True)
-    pdf.ln(5)
-    pdf.cell(0, 10, f"Tipo de solución: {export_data['resultado']['tipo']}", ln=True)
+    textos = []
+    textos.append(f"Recta 1: {export_data['a1']}x + {export_data['b1']}y + {export_data['c1']} = 0")
+    textos.append(f"Recta 2: {export_data['a2']}x + {export_data['b2']}y + {export_data['c2']} = 0")
+    textos.append(f"Tipo de solución: {export_data['resultado']['tipo']}")
     if export_data["resultado"]["punto"]:
-        pdf.cell(0, 10, f"Punto de intersección: {export_data['resultado']['punto']}", ln=True)
-    pdf.ln(5)
-    pdf.cell(0, 10, f"Recta 1 - Pendiente: {export_data['datos1']['pendiente']}, Ángulo: {export_data['datos1']['anguloConEjeX']}°", ln=True)
-    pdf.cell(0, 10, f"Recta 2 - Pendiente: {export_data['datos2']['pendiente']}, Ángulo: {export_data['datos2']['anguloConEjeX']}°", ln=True)
-    pdf.ln(5)
-    pdf.cell(0, 10, f"Ángulo entre rectas: {export_data['angulo_entre_rectas']}°", ln=True)
+        textos.append(f"Punto de intersección: {export_data['resultado']['punto']}")
+    textos.append(f"Pendiente Recta 1: {export_data['datos1']['pendiente']}")
+    textos.append(f"Pendiente Recta 2: {export_data['datos2']['pendiente']}")
+    textos.append(f"Ángulo Recta 1: {export_data['datos1']['anguloConEjeX']}°")
+    textos.append(f"Ángulo Recta 2: {export_data['datos2']['anguloConEjeX']}°")
+    textos.append(f"Ángulo entre rectas: {export_data['angulo_entre_rectas']}°")
     if export_data["distancia_interseccion_origen"] is not None:
-        pdf.cell(0, 10, f"Distancia entre la intersección y el origen: {export_data['distancia_interseccion_origen']}", ln=True)
-    pdf.ln(10)
-    pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
+        textos.append(f"Distancia intersección - origen: {export_data['distancia_interseccion_origen']}")
     
-    mem = io.BytesIO()
-    pdf.output(mem)
-    mem.seek(0)
-    return send_file(mem, mimetype="application/pdf", as_attachment=True, attachment_filename="resultados.pdf")
+    pdf_io = generar_pdf_resultado(textos)
+    if pdf_io is None:
+        flash("Error al generar el PDF.")
+        return redirect(url_for("index"))
+    return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados.pdf")
 
-# Rutas para exportar resultados de la ecuación única
-@app.route("/export_single/csv")
-def export_csv_single():
-    export_data = session.get("export_data_single")
-    if not export_data:
-        flash("No hay datos para exportar.")
-        return redirect(url_for("single"))
-    
-    si = io.StringIO()
-    cw = csv.writer(si)
-    cw.writerow(["Parámetro", "Valor"])
-    cw.writerow(["a", export_data["a"]])
-    cw.writerow(["b", export_data["b"]])
-    cw.writerow(["c", export_data["c"]])
-    cw.writerow(["Pendiente", export_data["datos"]["pendiente"]])
-    cw.writerow(["Ángulo con eje X (°)", export_data["datos"]["anguloConEjeX"]])
-    cw.writerow(["Distancia al origen", export_data["datos"]["distanciaAlOrigen"]])
-    
-    si.seek(0)
-    mem = io.BytesIO()
-    mem.write(si.getvalue().encode("utf-8"))
-    mem.seek(0)
-    return send_file(mem, mimetype="text/csv", as_attachment=True, attachment_filename="resultados_unica.csv")
-
+# -------------------------------------------------------------------------
+# Ruta para exportar PDF (para ecuación única)
+# -------------------------------------------------------------------------
 @app.route("/export_single/pdf")
 def export_pdf_single():
     export_data = session.get("export_data_single")
@@ -410,35 +374,36 @@ def export_pdf_single():
         flash("No hay datos para exportar.")
         return redirect(url_for("single"))
     
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Resultados - Ecuación Única", ln=True, align="C")
-    pdf.ln(10)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Ecuación: {export_data['a']}x + {export_data['b']}y + {export_data['c']} = 0", ln=True)
-    pdf.ln(5)
-    pdf.cell(0, 10, f"Pendiente: {export_data['datos']['pendiente']}", ln=True)
-    pdf.cell(0, 10, f"Ángulo con eje X (°): {export_data['datos']['anguloConEjeX']}", ln=True)
-    pdf.cell(0, 10, f"Distancia al origen: {export_data['datos']['distanciaAlOrigen']}", ln=True)
-    pdf.ln(10)
-    pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
+    textos = []
+    textos.append(f"Ecuación: {export_data['a']}x + {export_data['b']}y + {export_data['c']} = 0")
+    textos.append(f"Pendiente: {export_data['datos']['pendiente']}")
+    textos.append(f"Ángulo con eje X: {export_data['datos']['anguloConEjeX']}°")
+    textos.append(f"Distancia al origen: {export_data['datos']['distanciaAlOrigen']}")
     
-    mem = io.BytesIO()
-    pdf.output(mem)
-    mem.seek(0)
-    return send_file(mem, mimetype="application/pdf", as_attachment=True, attachment_filename="resultados_unica.pdf")
+    pdf_io = generar_pdf_resultado(textos)
+    if pdf_io is None:
+        flash("Error al generar el PDF.")
+        return redirect(url_for("single"))
+    return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados_unica.pdf")
 
-# --- Rutas para Reporte de Errores y Donaciones ---
-
+# -------------------------------------------------------------------------
+# Ruta para Reporte de Errores
+# -------------------------------------------------------------------------
 @app.route("/error_report", methods=["GET", "POST"])
 def error_report():
     if request.method == "POST":
-        # Aquí se procesaría el reporte de error (por ejemplo, guardarlo o enviarlo por email)
-        flash("¡Gracias por reportar el error!")
+        mensaje = request.form.get("mensaje", "")
+        if mensaje:
+            enviar_reporte_error(mensaje)
+            flash("¡Gracias por reportar el error!")
+        else:
+            flash("Debes escribir un mensaje.")
         return redirect(url_for("index"))
     return render_template("error_report.html")
 
+# -------------------------------------------------------------------------
+# Ruta para Donaciones
+# -------------------------------------------------------------------------
 @app.route("/donations")
 def donations():
     return render_template("donations.html")

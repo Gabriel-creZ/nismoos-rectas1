@@ -15,7 +15,6 @@
     </a>
     <header class="header">
       <h1>Ecuación Única</h1>
-      <!-- Menú de navegación -->
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
         <a href="{{ url_for('single') }}">Ecuación Única</a> |
@@ -25,11 +24,15 @@
       </nav>
     </header>
     
-    {% if error %}
-      <div class="error-message">
-        <p><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
-      </div>
-    {% endif %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="error-message">
+          {% for msg in messages %}
+            <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
     
     <div class="content">
       <div class="form-container">
@@ -50,7 +53,7 @@
             <label for="c">c:</label>
             <input type="text" name="c" id="c" placeholder="Valor de c" required>
           </div>
-          <!-- Rango opcional para la gráfica -->
+          <!-- Rango opcional -->
           <fieldset>
             <legend>Rango de la gráfica (opcional):</legend>
             <div class="form-group">
@@ -86,15 +89,13 @@
         <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de la recta" class="triangle-image">
       </div>
       <div class="result-item">
-        <a href="{{ url_for('export_csv_single') }}" class="btn"><i class="fas fa-file-csv"></i> Exportar CSV</a>
         <a href="{{ url_for('export_pdf_single') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
+      </div>
+      <div class="result-item">
+        <a href="{{ url_for('single') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
       </div>
       {% endif %}
       
-    </div>
-    
-    <div class="result-item">
-      <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Regresar</a>
     </div>
     
     <div class="footer">
