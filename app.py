@@ -15,7 +15,7 @@ app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
 
 # ---------------------------
-# Función: Convertir recta en formato general a forma pendiente-intersección
+# Función: Convertir recta de formato general a forma pendiente-intersección
 # ---------------------------
 def general_to_slope_intercept(A, B, C):
     if abs(B) < 1e-8:
@@ -35,10 +35,29 @@ def distance_between_points(x1, y1, x2, y2):
 # ---------------------------
 def angle_between_lines(m1, m2):
     if m1 is None or m2 is None:
-        # Si ambas son verticales, ángulo 0; si solo una, 90°
-        return 0.0 if (m1 is None and m2 is None) else 90.0
+        if m1 is None and m2 is None:
+            return 0.0
+        return 90.0
     tan_angle = abs((m1 - m2) / (1 + m1 * m2))
     return math.degrees(math.atan(tan_angle))
+
+# ---------------------------
+# Función: Calcular datos detallados de una recta
+# ---------------------------
+def calcularDatosRecta(a, b, c):
+    datos = {}
+    if abs(b) < 1e-8:
+        datos["pendiente"] = None
+    else:
+        datos["pendiente"] = -a / b
+    datos["interseccionX"] = None if abs(a) < 1e-8 else -c / a
+    datos["interseccionY"] = None if abs(b) < 1e-8 else -c / b
+    if datos["pendiente"] is None:
+        datos["anguloConEjeX"] = 90.0
+    else:
+        datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
+    datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b)
+    return datos
 
 # ---------------------------
 # Función: Graficar dos rectas con detalles
@@ -66,7 +85,6 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_range=(-10, 10)):
         x_const = -c2 / a2
         plt.axvline(x_const, color='teal', label=f"R2: x = {x_const:.2f}")
     
-    # Graficar el punto de intersección si existe
     if resultado.get("tipo") == "interseccion" and resultado.get("punto"):
         x_int, y_int = resultado["punto"]
         plt.plot(x_int, y_int, 'ko', label="Intersección")
@@ -97,7 +115,6 @@ def graficarEcuacionSimple(a, b, c, x_range=(-10, 10)):
     plt.figure(figsize=(7, 7))
     x_vals = [x_range[0] + i * (x_range[1]-x_range[0]) / 400 for i in range(401)]
     if abs(b) < 1e-8:
-        # Ecuación vertical: x = -c/a
         x_const = -c / a
         plt.axvline(x_const, color="purple", label=f"Ecuación: x = {x_const:.2f}")
     else:
@@ -214,29 +231,34 @@ def index():
                     return None
                 return float(val)
             
-            # Intentar obtener coeficientes para dos rectas
+            # Obtener coeficientes para la primera recta (requeridos)
             a1 = get_val("a1")
             b1 = get_val("b1")
             c1 = get_val("c1")
-            a2 = get_val("a2")
-            b2 = get_val("b2")
-            c2 = get_val("c2")
-            
-            # Validación: Se debe ingresar la primera recta
             if a1 is None or b1 is None or c1 is None:
                 flash("Ingrese los coeficientes de al menos la primera recta.")
                 return redirect(url_for('index'))
             
+            # Intentar obtener coeficientes para la segunda recta (opcionales)
+            a2 = get_val("a2")
+            b2 = get_val("b2")
+            c2 = get_val("c2")
+            
             modo = "dual"
-            # Si la segunda recta no se ingresa, se toma modo simple
             if a2 is None and b2 is None and c2 is None:
                 modo = "simple"
             
             if modo == "dual":
                 resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+                # Calcular datos detallados de cada recta
+                datos1 = calcularDatosRecta(a1, b1, c1)
+                datos2 = calcularDatosRecta(a2, b2, c2)
+                # Conversión a forma pendiente-intersección
                 m1, b_inter1 = general_to_slope_intercept(a1, b1, c1)
                 m2, b_inter2 = general_to_slope_intercept(a2, b2, c2)
+                # Calcular ángulo entre rectas
                 angulo = angle_between_lines(m1, m2)
+                # Distancia del punto de intersección al origen
                 if resultado.get("punto"):
                     x_int, y_int = resultado["punto"]
                     dist = distance_between_points(0, 0, x_int, y_int)
@@ -244,47 +266,57 @@ def index():
                     dist = None
                 grafico = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
                 
-                # Guardar datos para exportar (ejemplo)
+                # Comparaciones para mostrar datos decorados
+                pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
+                pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+                if abs(pendiente1) > abs(pendiente2):
+                    comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
+                elif abs(pendiente1) < abs(pendiente2):
+                    comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+                else:
+                    comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
+                
+                if datos1["anguloConEjeX"] > datos2["anguloConEjeX"]:
+                    comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {datos1['anguloConEjeX']}°"
+                elif datos1["anguloConEjeX"] < datos2["anguloConEjeX"]:
+                    comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {datos2['anguloConEjeX']}°"
+                else:
+                    comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
+                
+                # Guardar datos para exportar
                 session['export_data'] = {
                     "recta1": {
-                        "pendiente": m1 if m1 is not None else "Vertical",
-                        "interseccionX": (-c1 / a1) if abs(b1) < 1e-8 else "N/A",
-                        "interseccionY": (-c1 / b1) if abs(b1) >= 1e-8 else "N/A",
-                        "distanciaAlOrigen": dist if dist is not None else "N/A"
+                        "pendiente": datos1["pendiente"] if datos1["pendiente"] is not None else "Vertical",
+                        "interseccionX": datos1["interseccionX"],
+                        "interseccionY": datos1["interseccionY"],
+                        "distanciaAlOrigen": datos1["distanciaAlOrigen"]
                     },
                     "recta2": {
-                        "pendiente": m2 if m2 is not None else "Vertical",
-                        "interseccionX": (-c2 / a2) if abs(b2) < 1e-8 else "N/A",
-                        "interseccionY": (-c2 / b2) if abs(b2) >= 1e-8 else "N/A",
-                        "distanciaAlOrigen": dist if dist is not None else "N/A"
+                        "pendiente": datos2["pendiente"] if datos2["pendiente"] is not None else "Vertical",
+                        "interseccionX": datos2["interseccionX"],
+                        "interseccionY": datos2["interseccionY"],
+                        "distanciaAlOrigen": datos2["distanciaAlOrigen"]
                     }
                 }
                 
-                datos_extra = {
-                    "angulo_entre_rectas": f"{angulo:.2f}°",
-                    "punto_interseccion": resultado.get("punto"),
-                    "distancia_origen": f"{dist:.2f}" if dist is not None else "N/A"
-                }
-                
                 return render_template("resultado.html", 
                                        resultado=resultado, 
                                        grafico=grafico, 
-                                       datos_extra=datos_extra)
+                                       datos1=datos1,
+                                       datos2=datos2,
+                                       comp_pendiente=comp_pendiente,
+                                       comp_inclinacion=comp_inclinacion)
             else:
                 # Modo simple: graficar una sola ecuación
-                # Calcular forma pendiente-intersección
                 m, b_inter = general_to_slope_intercept(a1, b1, c1)
-                # Calcular intersecciones (si es posible)
                 x_inter = -c1 / a1 if abs(a1) > 1e-8 else None
                 y_inter = -c1 / b1 if abs(b1) > 1e-8 else None
-                # Graficar la ecuación simple
                 grafico = graficarEcuacionSimple(a1, b1, c1)
-                # Construir un "resultado" simple para mostrar datos
                 resultado = {"tipo": "simple", "pendiente": m, "interseccion": (x_inter, y_inter)}
                 return render_template("resultado.html", 
                                        resultado=resultado, 
-                                       grafico=grafico, 
-                                       datos_extra={"modo": "simple"})
+                                       grafico=grafico,
+                                       datos1=calcularDatosRecta(a1, b1, c1))
         except Exception as e:
             flash("Error: " + str(e))
             return redirect(url_for('index'))

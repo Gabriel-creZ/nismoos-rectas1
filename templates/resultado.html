@@ -33,9 +33,9 @@
           <h2 class="results-title">⭐ Las rectas son coincidentes (infinitos puntos de intersección).</h2>
         {% elif resultado.tipo == "simple" %}
           <h2 class="results-title">📐 Ecuación única</h2>
-          <p class="result-item">Pendiente: {{ resultado.pendiente if resultado.pendiente is not none else "Vertical" }}</p>
+          <p class="result-item">✴️ Pendiente: {{ resultado.pendiente if resultado.pendiente is not none else "Vertical" }}</p>
           {% if resultado.interseccion %}
-          <p class="result-item">Intersección: ({{ resultado.interseccion[0] }}, {{ resultado.interseccion[1] }})</p>
+          <p class="result-item">🔸 Intersección: ({{ resultado.interseccion[0] }}, {{ resultado.interseccion[1] }})</p>
           {% endif %}
         {% else %}
           <h2 class="results-title">❓ Caso indefinido.</h2>
@@ -43,8 +43,24 @@
         
         {% if resultado.tipo != "simple" %}
           <div class="result-item">
-            <p>{{ datos_extra.angulo_entre_rectas if datos_extra and datos_extra.angulo_entre_rectas else "" }}</p>
-            <p>{{ datos_extra.distancia_origen if datos_extra and datos_extra.distancia_origen else "" }}</p>
+            <h3>=== Datos de la Recta 1 ===</h3>
+            <p>✴️  Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
+            <p>🔸 Absisa (Intersección con eje X): {{ datos1.interseccionX }}</p>
+            <p>🔹 Ordenada (Intersección con eje Y): {{ datos1.interseccionY }}</p>
+            <p>📐 Inclinación (ángulo con eje X): {{ datos1.anguloConEjeX }}°</p>
+            <p>📏 Distancia desde el origen: {{ datos1.distanciaAlOrigen }}</p>
+          </div>
+          <div class="result-item">
+            <h3>=== Datos de la Recta 2 ===</h3>
+            <p>✴️  Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
+            <p>🔸 Absisa (Intersección con eje X): {{ datos2.interseccionX }}</p>
+            <p>🔹 Ordenada (Intersección con eje Y): {{ datos2.interseccionY }}</p>
+            <p>📐 Inclinación (ángulo con eje X): {{ datos2.anguloConEjeX }}°</p>
+            <p>📏 Distancia desde el origen: {{ datos2.distanciaAlOrigen }}</p>
+          </div>
+          <div class="result-item">
+            <p>{{ comp_pendiente }}</p>
+            <p>{{ comp_inclinacion }}</p>
           </div>
         {% endif %}
         
