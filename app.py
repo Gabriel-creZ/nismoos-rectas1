@@ -148,10 +148,6 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.close()
     return buf
 
-# Función auxiliar para convertir entradas a float aceptando coma o punto decimal
-def parse_float(valor):
-    return float(valor.strip().replace(',', '.'))
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -178,26 +174,32 @@ def index():
     
     if request.method == "POST":
         try:
-            # Conversión robusta a float usando parse_float
-            a1 = parse_float(request.form.get("a1", "0"))
-            b1 = parse_float(request.form.get("b1", "0"))
-            c1 = parse_float(request.form.get("c1", "0"))
-            a2 = parse_float(request.form.get("a2", "0"))
-            b2 = parse_float(request.form.get("b2", "0"))
-            c2 = parse_float(request.form.get("c2", "0"))
+            # Conversión de coeficientes
+            a1 = float(request.form.get("a1", "0").strip())
+            b1 = float(request.form.get("b1", "0").strip())
+            c1 = float(request.form.get("c1", "0").strip())
+            a2 = float(request.form.get("a2", "0").strip())
+            b2 = float(request.form.get("b2", "0").strip())
+            c2 = float(request.form.get("c2", "0").strip())
             
-            # Rangos con valores por defecto
-            x_min = parse_float(request.form.get("x_min", "-10"))
-            x_max = parse_float(request.form.get("x_max", "10"))
-            y_min = parse_float(request.form.get("y_min", "-10"))
-            y_max = parse_float(request.form.get("y_max", "10"))
+            # Validación de rangos opcionales:
+            # Si el campo está vacío se asigna el valor predeterminado (-10 o 10)
+            x_min_str = request.form.get("x_min", "").strip()
+            x_max_str = request.form.get("x_max", "").strip()
+            y_min_str = request.form.get("y_min", "").strip()
+            y_max_str = request.form.get("y_max", "").strip()
+            
+            x_min = float(x_min_str) if x_min_str != "" else -10
+            x_max = float(x_max_str) if x_max_str != "" else 10
+            y_min = float(y_min_str) if y_min_str != "" else -10
+            y_max = float(y_max_str) if y_max_str != "" else 10
             
             if x_min >= x_max or y_min >= y_max:
                 flash("Error: Los valores máximos deben ser mayores que los mínimos")
                 return render_template("index.html")
                 
         except ValueError:
-            flash("Error: Ingresa solo números (ej. 3, -2.5, 0.7). Usa punto o coma para decimales.")
+            flash("Error: Ingresa solo números (ej. 3, -2.5, 0.7).")
             return render_template("index.html")
         
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
@@ -221,12 +223,12 @@ def index():
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
         return render_template("resultado.html",
-                           resultado=resultado,
-                           datos1=datos1,
-                           datos2=datos2,
-                           comp_pendiente=comp_pendiente,
-                           angulo_entre_rectas=angulo_entre_rectas,
-                           grafico=grafico)
+                               resultado=resultado,
+                               datos1=datos1,
+                               datos2=datos2,
+                               comp_pendiente=comp_pendiente,
+                               angulo_entre_rectas=angulo_entre_rectas,
+                               grafico=grafico)
     return render_template("index.html")
 
 @app.route("/single", methods=["GET", "POST"])
@@ -236,14 +238,19 @@ def single():
     
     if request.method == "POST":
         try:
-            a = parse_float(request.form["a"])
-            b = parse_float(request.form["b"])
-            c = parse_float(request.form["c"])
+            a = float(request.form["a"].strip())
+            b = float(request.form["b"].strip())
+            c = float(request.form["c"].strip())
             
-            x_min = parse_float(request.form.get("x_min", "-10"))
-            x_max = parse_float(request.form.get("x_max", "10"))
-            y_min = parse_float(request.form.get("y_min", "-10"))
-            y_max = parse_float(request.form.get("y_max", "10"))
+            x_min_str = request.form.get("x_min", "").strip()
+            x_max_str = request.form.get("x_max", "").strip()
+            y_min_str = request.form.get("y_min", "").strip()
+            y_max_str = request.form.get("y_max", "").strip()
+            
+            x_min = float(x_min_str) if x_min_str != "" else -10
+            x_max = float(x_max_str) if x_max_str != "" else 10
+            y_min = float(y_min_str) if y_min_str != "" else -10
+            y_max = float(y_max_str) if y_max_str != "" else 10
         except ValueError:
             flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
             return render_template("single.html")
