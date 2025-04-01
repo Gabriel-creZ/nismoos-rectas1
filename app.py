@@ -167,6 +167,8 @@ def logout():
     flash("Sesión cerrada correctamente.")
     return redirect(url_for("login"))
 
+# ... (funciones enviar_reporte_error, resolverSistema, calcularDatosRecta, graficarRectas, graficarRectaUnica se mantienen igual)
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if not session.get("logged_in"):
@@ -174,19 +176,26 @@ def index():
     
     if request.method == "POST":
         try:
-            a1 = float(request.form["a1"].strip())
-            b1 = float(request.form["b1"].strip())
-            c1 = float(request.form["c1"].strip())
-            a2 = float(request.form["a2"].strip())
-            b2 = float(request.form["b2"].strip())
-            c2 = float(request.form["c2"].strip())
+            # Conversión robusta a float
+            a1 = float(request.form.get("a1", "0").strip())
+            b1 = float(request.form.get("b1", "0").strip())
+            c1 = float(request.form.get("c1", "0").strip())
+            a2 = float(request.form.get("a2", "0").strip())
+            b2 = float(request.form.get("b2", "0").strip())
+            c2 = float(request.form.get("c2", "0").strip())
             
+            # Rangos con valores por defecto
             x_min = float(request.form.get("x_min", "-10").strip())
             x_max = float(request.form.get("x_max", "10").strip())
             y_min = float(request.form.get("y_min", "-10").strip())
             y_max = float(request.form.get("y_max", "10").strip())
-        except ValueError as e:
-            flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
+            
+            if x_min >= x_max or y_min >= y_max:
+                flash("Error: Los valores máximos deben ser mayores que los mínimos")
+                return render_template("index.html")
+                
+        except ValueError:
+            flash("Error: Ingresa solo números (ej. 3, -2.5, 0.7). Usa punto para decimales.")
             return render_template("index.html")
         
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)

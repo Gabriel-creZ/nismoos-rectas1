@@ -4,49 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso - Instant Math Solver</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.4">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
   <div class="login-container">
-    <div class="label-image-container">
-      <a href="https://bachantoniomadna.milaulas.com" target="_blank">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Instant Math Solver" class="logo">
-      </a>
-    </div>
-    <h2 class="login-title"><i class="fas fa-ruler"></i> Acceso para el Usuario AMRD 🦌</h2>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="error-message">
-          {% for msg in messages %}
-            <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
-          {% endfor %}
+    <div class="login-box">
+      <div class="label-image-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="login-logo">
+      </div>
+      <h1 class="login-title"><i class="fas fa-ruler"></i> Instant Math Solver</h1>
+      
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="login-error">
+            {% for msg in messages %}
+              <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      
+      <form method="POST" class="login-form">
+        <div class="form-group">
+          <input type="text" name="username" placeholder="Usuario" required class="login-input">
         </div>
-      {% endif %}
-    {% endwith %}
-    <form method="POST" action="{{ url_for('login') }}" class="login-form">
-      <div class="form-group">
-        <label for="username"><i class="fas fa-user"></i> Usuario:</label>
-        <input type="text" name="username" id="username" placeholder="Ingrese su usuario" required>
-      </div>
-      <div class="form-group">
-        <label for="password"><i class="fas fa-key"></i> Contraseña:</label>
-        <input type="password" name="password" id="password" placeholder="Ingrese su contraseña" required>
-      </div>
-      <button type="submit" class="login-btn">
-        <i class="fas fa-sign-in-alt"></i> Ingresar
-      </button>
-    </form>
-
+        <div class="form-group">
+          <input type="password" name="password" placeholder="Contraseña" required class="login-input">
+        </div>
+        <button type="submit" class="login-btn">
+          <i class="fas fa-sign-in-alt"></i> INGRESAR
+        </button>
+      </form>
+    </div>
+    
     <div class="triangle-link-container">
       <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank" class="triangle-link">
-        <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        <i class="fas fa-external-link-alt"></i> Resolver Triángulos
       </a>
     </div>
-
-    <div class="footer">
-      <p><em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em></p>
+    
+    <div class="login-footer">
+      <p>@ 2025 Instant Math Solver - AMRD</p>
     </div>
   </div>
 </body>
