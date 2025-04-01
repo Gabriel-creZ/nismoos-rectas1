@@ -68,9 +68,11 @@
         <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas" class="triangle-image">
       </div>
       
-      <div class="result-item">
-        <!-- Solo queda la opción de exportar la imagen -->
-        <a href="{{ url_for('export_image') }}" class="btn"><i class="fas fa-image"></i> Exportar Imagen</a>
+      <!-- El enlace externo se mueve al final en esta página -->
+      <div class="external-link-box">
+        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        </a>
       </div>
       
       <div class="result-item">

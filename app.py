@@ -3,7 +3,6 @@ import io
 import os
 import base64
 import smtplib
-import tempfile
 from email.mime.text import MIMEText
 
 import numpy as np
@@ -11,7 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
 app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
@@ -241,8 +240,15 @@ def index():
         datos1 = calcularDatosRecta(a1, b1, c1)
         datos2 = calcularDatosRecta(a2, b2, c2)
         
-        pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
-        pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+        if datos1["pendiente"] is None:
+            pendiente1 = float('inf')
+        else:
+            pendiente1 = datos1["pendiente"]
+        if datos2["pendiente"] is None:
+            pendiente2 = float('inf')
+        else:
+            pendiente2 = datos2["pendiente"]
+        
         if abs(pendiente1) > abs(pendiente2):
             comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
         elif abs(pendiente2) > abs(pendiente1):
@@ -268,6 +274,7 @@ def index():
         if resultado["tipo"] == "interseccion" and resultado["punto"]:
             distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
         
+        # Guardamos datos en sesión para usar si es necesario
         session["export_data"] = {
             "a1": a1, "b1": b1, "c1": c1,
             "a2": a2, "b2": b2, "c2": c2,
@@ -331,22 +338,8 @@ def single():
     return render_template("single.html")
 
 # -------------------------------------------------------------------------
-# Exportar imagen del gráfico (método de exportación alternativo)
+# Eliminamos todas las opciones de exportación
 # -------------------------------------------------------------------------
-@app.route("/export/image")
-def export_image():
-    export_data = session.get("export_data")
-    if not export_data or "grafico" not in export_data:
-        flash("No hay imagen para exportar.")
-        return redirect(url_for("index"))
-    try:
-        img_data = base64.b64decode(export_data["grafico"])
-    except Exception as e:
-        flash("Error al obtener la imagen.")
-        return redirect(url_for("index"))
-    mem = io.BytesIO(img_data)
-    mem.seek(0)
-    return send_file(mem, mimetype="image/png", as_attachment=True, download_name="grafico.png")
 
 # -------------------------------------------------------------------------
 # Reporte de Errores
