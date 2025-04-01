@@ -10,45 +10,34 @@
 </head>
 <body>
   <div class="container">
+    <!-- La imagen label-image ahora es un enlace -->
     <a href="https://bachantoniomadna.milaulas.com" target="_blank" class="label-image-container">
       <img src="{{ url_for('static', filename='images/label-image.png') }}" alt="Logo Instant Math Solver" class="label-image">
     </a>
     <header class="header">
       <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
       <p class="creator">By: <em>gabriel_cre</em></p>
-      <nav>
-        <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
-        <a href="{{ url_for('single') }}">Ecuación Única</a> |
-        <a href="{{ url_for('error_report') }}">Reportar Error</a> |
-        <a href="{{ url_for('donations') }}">Donaciones</a> |
-        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
-      </nav>
-      <div class="external-link">
+      <div class="equation-link">
         <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
           <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
         </a>
       </div>
     </header>
     
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="error-message">
-          {% for msg in messages %}
-            <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+    {% if error %}
+      <div class="error-message">
+        <p><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+      </div>
+    {% endif %}
     
     <div class="content">
       <div class="form-container">
-        <h2><i class="fas fa-calculator"></i> Ingresar Coeficientes para 2 Ecuaciones</h2>
+        <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Coeficientes</h2>
         <div class="instruction">
           Ingresa los coeficientes para cada recta en la forma a*x + b*y + c = 0.<br>
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
         <form method="POST">
-          <!-- Primera ecuación -->
           <div class="form-group">
             <label for="a1">a₁:</label>
             <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
@@ -61,7 +50,6 @@
             <label for="c1">c₁:</label>
             <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
           </div>
-          <!-- Segunda ecuación -->
           <div class="form-group">
             <label for="a2">a₂:</label>
             <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
@@ -74,33 +62,15 @@
             <label for="c2">c₂:</label>
             <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
           </div>
-          <!-- Rango opcional -->
-          <fieldset>
-            <legend>Rango de la gráfica (opcional):</legend>
-            <div class="form-group">
-              <label for="x_min">X mínimo:</label>
-              <input type="text" name="x_min" id="x_min" placeholder="-10">
-            </div>
-            <div class="form-group">
-              <label for="x_max">X máximo:</label>
-              <input type="text" name="x_max" id="x_max" placeholder="10">
-            </div>
-            <div class="form-group">
-              <label for="y_min">Y mínimo:</label>
-              <input type="text" name="y_min" id="y_min" placeholder="-10">
-            </div>
-            <div class="form-group">
-              <label for="y_max">Y máximo:</label>
-              <input type="text" name="y_max" id="y_max" placeholder="10">
-            </div>
-          </fieldset>
-          <button type="submit" class="btn"><i class="fas fa-calculator"></i> Calcular</button>
+          <button type="submit" class="btn">
+            <i class="fas fa-calculator"></i> Calcular
+          </button>
         </form>
       </div>
     </div>
     
     <div class="footer">
-      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
   </div>
 </body>

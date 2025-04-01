@@ -1,43 +1,20 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import math
-import io
-import base64
-import smtplib
-from email.mime.text import MIMEText
-
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+import io
+import base64
 
 app = Flask(__name__)
-app.secret_key = 'j350z271123r'
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600
-app.config['SESSION_TYPE'] = 'filesystem'
+app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
 
-def enviar_reporte_error(mensaje):
-    destinatario = "castilloreyesgabriel4@gmail.com"
-    asunto = "Reporte de Error - Instant Math Solver"
-    
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    correo_origen = "castilloreyesgabriel4@gmail.com"
-    password = "wkiqrqkcvhoirdyr"
-    
-    msg = MIMEText(mensaje)
-    msg["Subject"] = asunto
-    msg["From"] = correo_origen
-    msg["To"] = destinatario
-    
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(correo_origen, password)
-            server.sendmail(correo_origen, destinatario, msg.as_string())
-    except Exception as e:
-        print(f"Error al enviar reporte: {e}")
+# Configuración de sesión (para mantener el login activo)
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
+
+# --- Funciones de cálculo y graficado ---
 
 def resolverSistema(a1, b1, c1, a2, b2, c2):
     det = a1 * b2 - a2 * b1
@@ -71,16 +48,22 @@ def resolverSistema(a1, b1, c1, a2, b2, c2):
 
 def calcularDatosRecta(a, b, c):
     datos = {}
-    datos["pendiente"] = None if abs(b) < 1e-14 else -a / b
+    if abs(b) < 1e-14:
+        datos["pendiente"] = None
+    else:
+        datos["pendiente"] = -a / b
     datos["interseccionX"] = None if abs(a) < 1e-14 else -c / a
     datos["interseccionY"] = None if abs(b) < 1e-14 else -c / b
-    datos["anguloConEjeX"] = 90.0 if datos["pendiente"] is None else math.degrees(math.atan(datos["pendiente"]))
+    if datos["pendiente"] is None:
+        datos["anguloConEjeX"] = 90.0
+    else:
+        datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
     datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b)
     return datos
 
-def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min=-10, y_max=10):
+def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     plt.figure(figsize=(7, 7))
-    x_vals = np.linspace(x_min, x_max, 400)
+    x_vals = np.linspace(-10, 10, 400)
     
     def get_y(a, b, c, x_array):
         return None if abs(b) < 1e-14 else (-a * x_array - c) / b
@@ -99,7 +82,7 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
         x_const = -c2 / a2
         plt.axvline(x_const, color='teal', label=f"R2: x = {x_const:.2f}")
     
-    if resultado["tipo"] == "interseccion" and resultado["punto"]:
+    if resultado["tipo"] == "interseccion" and resultado["punto"] is not None:
         x_sol, y_sol = resultado["punto"]
         plt.plot(x_sol, y_sol, 'ko', label="Intersección")
     
@@ -108,71 +91,40 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
     plt.xlabel("Eje X")
     plt.ylabel("Eje Y")
     plt.title("Gráfica de las Rectas")
-    plt.legend(loc="upper right")
+    plt.legend()
     plt.grid(True)
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.gca().set_aspect('equal', adjustable='box')
+    plt.axis('equal')
     
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100)
+    plt.savefig(buf, format="png")
     buf.seek(0)
     plt.close()
     return buf
 
-def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
-    plt.figure(figsize=(7, 7))
-    x_vals = np.linspace(x_min, x_max, 400)
-    
-    y = (-a * x_vals - c) / b if abs(b) > 1e-14 else None
-    if y is not None:
-        plt.plot(x_vals, y, label=f"{a}x + {b}y + {c} = 0", color="purple")
-    else:
-        x_const = -c / a
-        plt.axvline(x_const, color="purple", label=f"x = {x_const:.2f}")
-    
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.axvline(0, color='black', linewidth=0.5)
-    plt.xlabel("Eje X")
-    plt.ylabel("Eje Y")
-    plt.title("Gráfica de la Recta")
-    plt.legend(loc="upper right")
-    plt.grid(True)
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.gca().set_aspect("equal", adjustable="box")
-    
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100)
-    buf.seek(0)
-    plt.close()
-    return buf
-
-def parse_optional_float(valor, default):
-    """Convierte a float el valor recibido, usando el valor por defecto si el campo está vacío."""
-    if valor is None:
-        return default
-    valor = valor.strip()
-    return float(valor) if valor != "" else default
+# --- Rutas para login y autenticación ---
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        # Validación con usuario "alumno" y contraseña "amrd"
         if username == "alumno" and password == "amrd":
             session["logged_in"] = True
             session["user"] = username
             return redirect(url_for("index"))
         else:
             flash("Usuario o contraseña incorrectos, intente de nuevo.")
+            return render_template("login.html")
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
-    session.clear()
+    session.pop("logged_in", None)
     flash("Sesión cerrada correctamente.")
     return redirect(url_for("login"))
+
+# --- Ruta principal (index) ---
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -181,99 +133,49 @@ def index():
     
     if request.method == "POST":
         try:
-            # Conversión robusta a float para coeficientes
-            a1 = float(request.form.get("a1", "0").strip())
-            b1 = float(request.form.get("b1", "0").strip())
-            c1 = float(request.form.get("c1", "0").strip())
-            a2 = float(request.form.get("a2", "0").strip())
-            b2 = float(request.form.get("b2", "0").strip())
-            c2 = float(request.form.get("c2", "0").strip())
-            
-            # Rango de la gráfica, usando valores por defecto si están vacíos
-            x_min = parse_optional_float(request.form.get("x_min", ""), -10)
-            x_max = parse_optional_float(request.form.get("x_max", ""), 10)
-            y_min = parse_optional_float(request.form.get("y_min", ""), -10)
-            y_max = parse_optional_float(request.form.get("y_max", ""), 10)
-            
-            if x_min >= x_max or y_min >= y_max:
-                flash("Error: Los valores máximos deben ser mayores que los mínimos")
-                return render_template("index.html")
-                
+            a1 = float(request.form["a1"])
+            b1 = float(request.form["b1"])
+            c1 = float(request.form["c1"])
+            a2 = float(request.form["a2"])
+            b2 = float(request.form["b2"])
+            c2 = float(request.form["c2"])
         except ValueError:
-            flash("Error: Ingresa solo números válidos (ej. 3, -2.5, 0.7). Usa punto para decimales.")
-            return render_template("index.html")
+            return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
         
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
         datos1 = calcularDatosRecta(a1, b1, c1)
         datos2 = calcularDatosRecta(a2, b2, c2)
         
+        # Comparación de pendientes e inclinaciones
         pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
         pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
-        
-        comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
         if abs(pendiente1) > abs(pendiente2):
             comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
         elif abs(pendiente2) > abs(pendiente1):
             comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+        else:
+            comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
         
         ang1 = datos1["anguloConEjeX"]
         ang2 = datos2["anguloConEjeX"]
-        angulo_entre_rectas = abs(ang1 - ang2) if abs(ang1 - ang2) <= 90 else 180 - abs(ang1 - ang2)
+        if ang1 > ang2:
+            comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
+        elif ang2 > ang1:
+            comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
+        else:
+            comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
         
-        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min, x_max, y_min, y_max)
+        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
         return render_template("resultado.html",
-                           resultado=resultado,
-                           datos1=datos1,
-                           datos2=datos2,
-                           comp_pendiente=comp_pendiente,
-                           angulo_entre_rectas=angulo_entre_rectas,
-                           grafico=grafico)
+                               resultado=resultado,
+                               datos1=datos1,
+                               datos2=datos2,
+                               comp_pendiente=comp_pendiente,
+                               comp_inclinacion=comp_inclinacion,
+                               grafico=grafico)
     return render_template("index.html")
 
-@app.route("/single", methods=["GET", "POST"])
-def single():
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
-    
-    if request.method == "POST":
-        try:
-            a = float(request.form["a"].strip())
-            b = float(request.form["b"].strip())
-            c = float(request.form["c"].strip())
-            
-            # Rango de la gráfica para la ecuación única
-            x_min = parse_optional_float(request.form.get("x_min", ""), -10)
-            x_max = parse_optional_float(request.form.get("x_max", ""), 10)
-            y_min = parse_optional_float(request.form.get("y_min", ""), -10)
-            y_max = parse_optional_float(request.form.get("y_max", ""), 10)
-        except ValueError:
-            flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
-            return render_template("single.html")
-        
-        datos = calcularDatosRecta(a, b, c)
-        buf = graficarRectaUnica(a, b, c, x_min, x_max, y_min, y_max)
-        grafico = base64.b64encode(buf.getvalue()).decode("ascii")
-        
-        return render_template("single.html", datos=datos, grafico=grafico)
-    return render_template("single.html")
-
-@app.route("/error_report", methods=["GET", "POST"])
-def error_report():
-    if request.method == "POST":
-        mensaje = request.form.get("mensaje", "")
-        if mensaje:
-            enviar_reporte_error(mensaje)
-            flash("¡Gracias por reportar el error!")
-        else:
-            flash("Debes escribir un mensaje.")
-        return redirect(url_for("index"))
-    return render_template("error_report.html")
-
-@app.route("/donations")
-def donations():
-    return render_template("donations.html")
-
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
