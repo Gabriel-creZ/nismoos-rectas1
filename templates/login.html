@@ -15,9 +15,7 @@
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Instant Math Solver" class="logo">
       </a>
     </div>
-    
     <h2 class="login-title"><i class="fas fa-ruler"></i> Acceso para el Usuario AMRD 🦌</h2>
-    
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="error-message">
@@ -27,7 +25,6 @@
         </div>
       {% endif %}
     {% endwith %}
-    
     <form method="POST" action="{{ url_for('login') }}" class="login-form">
       <div class="form-group">
         <label for="username"><i class="fas fa-user"></i> Usuario:</label>
@@ -41,11 +38,8 @@
         <i class="fas fa-sign-in-alt"></i> Ingresar
       </button>
     </form>
-    
     <div class="footer">
-      <p><em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em></p>
-      <a href="https://www.paypal.com/donate?business=castilloreyesgabriel7@gmail.com" target="_blank" class="btn">Donar con PayPal</a>
-      <a href="mailto:castilloreyesgabriel4@gmail.com" class="btn">Reportar Error</a>
+      <p><em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em></p>
     </div>
   </div>
 </body>
