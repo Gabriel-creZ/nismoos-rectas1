@@ -10,9 +10,10 @@
   --equation-link-color: #4a6fa5;
   --equation-link-hover: #3a5a8a;
   --button-hover: #81c784;
+  --triangle-link-color: #4361ee;
+  --triangle-link-hover: #3a56d4;
 }
 
-/* Fondo general con color verde */
 body {
   font-family: 'Poppins', sans-serif;
   background-color: var(--background-color);
@@ -26,7 +27,6 @@ body {
   align-items: center;
 }
 
-/* Contenedor blanco central */
 .container {
   background: white;
   max-width: 600px;
@@ -38,7 +38,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Imagen label centrada */
 .label-image-container {
   text-align: center;
   margin-bottom: 20px;
@@ -57,7 +56,6 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Header */
 .header {
   text-align: center;
   margin-bottom: 20px;
@@ -74,35 +72,6 @@ body {
   margin: 5px 0 15px 0;
 }
 
-/* Enlace de ecuaciones */
-.equation-link {
-  margin: 20px 0;
-  text-align: center;
-}
-
-.equation-link a {
-  background-color: var(--equation-link-color);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s;
-  font-weight: 500;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.equation-link a:hover {
-  background-color: var(--equation-link-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.equation-link a i {
-  margin-right: 8px;
-}
-
-/* Mensajes de error */
 .error-message {
   background-color: #fee2e2;
   color: #dc2626;
@@ -112,8 +81,6 @@ body {
   text-align: center;
 }
 
-/* Formularios */
-.login-form .form-group,
 .form-group {
   margin-bottom: 15px;
   text-align: left;
@@ -141,8 +108,6 @@ body {
   outline: none;
 }
 
-/* Botones centrados */
-.login-btn,
 .btn {
   background-color: var(--primary-color);
   color: white;
@@ -161,14 +126,12 @@ body {
   box-sizing: border-box;
 }
 
-.login-btn:hover,
 .btn:hover {
   background-color: var(--button-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Contenido y resultados */
 .content {
   display: flex;
   flex-direction: column;
@@ -216,24 +179,39 @@ body {
 
 .triangle-image {
   max-width: 100%;
-  display: block;
-  margin: 0 auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Login container (usa contenedor blanco) */
-.login-container {
-  background: white;
-  max-width: 400px;
-  width: 90%;
-  margin: 50px auto;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.triangle-link-container {
+  margin: 30px auto;
   text-align: center;
-  box-sizing: border-box;
+  width: 100%;
 }
 
-/* Pie de página */
+.triangle-link {
+  background-color: var(--triangle-link-color);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.triangle-link:hover {
+  background-color: var(--triangle-link-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.triangle-link i {
+  margin-right: 8px;
+}
+
 .footer {
   text-align: center;
   margin-top: 30px;
@@ -250,7 +228,6 @@ body {
   color: var(--primary-color);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .container {
     padding: 20px;
@@ -270,46 +247,8 @@ body {
   .form-group input {
     padding: 10px 12px;
   }
-  .btn, .login-btn {
+  .btn {
     padding: 12px 20px;
     font-size: 1rem;
   }
-}
-/* Estilos anteriores se mantienen igual */
-
-/* Nuevos estilos agregados */
-.triangle-link-container {
-  margin: 30px auto;
-  text-align: center;
-  width: 100%;
-}
-
-.triangle-link {
-  background-color: #4a6fa5;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s;
-  font-weight: 500;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.triangle-link:hover {
-  background-color: #3a5a8a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.triangle-link i {
-  margin-right: 8px;
-}
-
-/* Optimización de gráficos */
-.triangle-image {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }

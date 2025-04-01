@@ -12,10 +12,10 @@ import matplotlib.pyplot as plt
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
+app.secret_key = 'j350z271123r'
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
-app.config['SESSION_TYPE'] = 'filesystem'  # Para evitar errores 502
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+app.config['SESSION_TYPE'] = 'filesystem'
 
 def enviar_reporte_error(mensaje):
     destinatario = "castilloreyesgabriel4@gmail.com"
@@ -174,19 +174,19 @@ def index():
     
     if request.method == "POST":
         try:
-            a1 = float(request.form["a1"])
-            b1 = float(request.form["b1"])
-            c1 = float(request.form["c1"])
-            a2 = float(request.form["a2"])
-            b2 = float(request.form["b2"])
-            c2 = float(request.form["c2"])
+            a1 = float(request.form["a1"].strip())
+            b1 = float(request.form["b1"].strip())
+            c1 = float(request.form["c1"].strip())
+            a2 = float(request.form["a2"].strip())
+            b2 = float(request.form["b2"].strip())
+            c2 = float(request.form["c2"].strip())
             
-            x_min = float(request.form.get("x_min", -10))
-            x_max = float(request.form.get("x_max", 10))
-            y_min = float(request.form.get("y_min", -10))
-            y_max = float(request.form.get("y_max", 10))
-        except ValueError:
-            flash("Por favor ingresa valores numéricos válidos.")
+            x_min = float(request.form.get("x_min", "-10").strip())
+            x_max = float(request.form.get("x_max", "10").strip())
+            y_min = float(request.form.get("y_min", "-10").strip())
+            y_max = float(request.form.get("y_max", "10").strip())
+        except ValueError as e:
+            flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
             return render_template("index.html")
         
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
@@ -225,16 +225,16 @@ def single():
     
     if request.method == "POST":
         try:
-            a = float(request.form["a"])
-            b = float(request.form["b"])
-            c = float(request.form["c"])
+            a = float(request.form["a"].strip())
+            b = float(request.form["b"].strip())
+            c = float(request.form["c"].strip())
             
-            x_min = float(request.form.get("x_min", -10))
-            x_max = float(request.form.get("x_max", 10))
-            y_min = float(request.form.get("y_min", -10))
-            y_max = float(request.form.get("y_max", 10))
-        except ValueError:
-            flash("Por favor ingresa valores numéricos válidos.")
+            x_min = float(request.form.get("x_min", "-10").strip())
+            x_max = float(request.form.get("x_max", "10").strip())
+            y_min = float(request.form.get("y_min", "-10").strip())
+            y_max = float(request.form.get("y_max", "10").strip())
+        except ValueError as e:
+            flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
             return render_template("single.html")
         
         datos = calcularDatosRecta(a, b, c)
