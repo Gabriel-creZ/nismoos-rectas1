@@ -1,57 +1,66 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import math
-import io
-import os
-import base64
-import smtplib
-from email.mime.text import MIMEText
-
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+import io
+import base64
 
 app = Flask(__name__)
 app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
-
-# Configuración de sesión
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
-# -------------------------------------------------------------------------
-# Función para enviar reporte de error por correo
-# -------------------------------------------------------------------------
-def enviar_reporte_error(mensaje):
-    """
-    Envía un correo electrónico con el reporte de error.
-    Configura los datos SMTP con tus credenciales reales.
-    """
-    destinatario = "castilloreyesgabriel4@gmail.com"
-    asunto = "Reporte de Error - Instant Math Solver"
-    
-    # Configuración SMTP (reemplaza estos valores por los tuyos)
-    smtp_server = "TU_SMTP_SERVER"   # ej. "smtp.gmail.com"
-    smtp_port = 587                  # Puerto SMTP
-    correo_origen = "TU_CORREO"      # ej. "tu_correo@gmail.com"
-    password = "TU_PASSWORD"         # Contraseña o contraseña de aplicación
-    
-    msg = MIMEText(mensaje)
-    msg["Subject"] = asunto
-    msg["From"] = correo_origen
-    msg["To"] = destinatario
-    
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(correo_origen, password)
-            server.sendmail(correo_origen, destinatario, msg.as_string())
-    except Exception as e:
-        print(f"Error al enviar reporte: {e}")
+# --- Funciones adicionales ---
 
-# -------------------------------------------------------------------------
-# Funciones de cálculo y graficado
-# -------------------------------------------------------------------------
+def convertirFormaPendiente(a, b, c):
+    """Convierte la ecuación Ax + By + C = 0 a forma pendiente-intersección (y = mx + b) si es posible."""
+    if abs(b) < 1e-14:
+        return "Vertical: x = {:.2f}".format(-c/a) if abs(a) > 1e-14 else "Indefinido"
+    else:
+        m = -a/b
+        interseccion = -c/b
+        return "y = {:.2f}x + {:.2f}".format(m, interseccion)
+
+def distanciaEntrePuntos(x1, y1, x2, y2):
+    """Calcula la distancia entre dos puntos."""
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def calcularAnguloEntreRectas(m1, m2):
+    """Calcula el ángulo entre dos rectas dadas sus pendientes.
+    Se maneja el caso de recta vertical utilizando float('inf')."""
+    if m1 == float('inf') or m2 == float('inf'):
+        if m1 == float('inf') and m2 != float('inf'):
+            ang = abs(90 - math.degrees(math.atan(abs(m2))))
+        elif m2 == float('inf') and m1 != float('inf'):
+            ang = abs(90 - math.degrees(math.atan(abs(m1))))
+        else:
+            ang = 0
+    else:
+        try:
+            tan_theta = abs((m1 - m2) / (1 + m1*m2))
+            ang = math.degrees(math.atan(tan_theta))
+        except ZeroDivisionError:
+            ang = 90.0
+    return ang
+
+def calcularDatosRecta(a, b, c):
+    datos = {}
+    if abs(b) < 1e-14:
+        datos["pendiente"] = None
+    else:
+        datos["pendiente"] = -a / b
+    datos["interseccionX"] = None if abs(a) < 1e-14 else -c / a
+    datos["interseccionY"] = None if abs(b) < 1e-14 else -c / b
+    if datos["pendiente"] is None:
+        datos["anguloConEjeX"] = 90.0
+    else:
+        datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
+    datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b) if (a != 0 or b != 0) else None
+    datos["formaPendiente"] = convertirFormaPendiente(a, b, c)
+    return datos
+
 def resolverSistema(a1, b1, c1, a2, b2, c2):
     det = a1 * b2 - a2 * b1
     resultado = {"det": det, "tipo": None, "punto": None}
@@ -80,60 +89,43 @@ def resolverSistema(a1, b1, c1, a2, b2, c2):
         y_sol = det_y / det
         resultado["tipo"] = "interseccion"
         resultado["punto"] = (x_sol, y_sol)
+        resultado["distanciaOrigen"] = distanciaEntrePuntos(x_sol, y_sol, 0, 0)
     return resultado
 
-def calcularDatosRecta(a, b, c):
-    datos = {}
-    if abs(b) < 1e-14:
-        datos["pendiente"] = None
-    else:
-        datos["pendiente"] = -a / b
-    datos["interseccionX"] = None if abs(a) < 1e-14 else -c / a
-    datos["interseccionY"] = None if abs(b) < 1e-14 else -c / b
-    if datos["pendiente"] is None:
-        datos["anguloConEjeX"] = 90.0
-    else:
-        datos["anguloConEjeX"] = math.degrees(math.atan(datos["pendiente"]))
-    datos["distanciaAlOrigen"] = abs(c) / math.sqrt(a * a + b * b)
-    return datos
-
-def distance_points(p1, p2):
-    return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
-
-def angle_between_lines(ang1, ang2):
-    diff = abs(ang1 - ang2)
-    if diff > 90:
-        diff = 180 - diff
-    return diff
-
-def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min=-10, y_max=10):
+def graficarRectas(a1, b1, c1, a2=None, b2=None, c2=None, resultado=None, rango=None):
     plt.figure(figsize=(7, 7))
-    x_vals = np.linspace(x_min, x_max, 400)
+    if rango:
+        x_min = rango.get("x_min", -10)
+        x_max = rango.get("x_max", 10)
+        y_min = rango.get("y_min", -10)
+        y_max = rango.get("y_max", 10)
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        x_vals = np.linspace(x_min, x_max, 400)
+    else:
+        x_vals = np.linspace(-10, 10, 400)
     
     def get_y(a, b, c, x_array):
         return None if abs(b) < 1e-14 else (-a * x_array - c) / b
     
+    # Graficar Recta 1
     y1 = get_y(a1, b1, c1, x_vals)
     if y1 is not None:
-        plt.plot(x_vals, y1, label=f"R1: {a1}x + {b1}y + {c1} = 0", color="darkorange")
+        plt.plot(x_vals, y1, label=f"R1: {convertirFormaPendiente(a1, b1, c1)}", color="darkorange")
     else:
-        try:
-            x_const = -c1 / a1
-            plt.axvline(x_const, color='darkorange', label=f"R1: x = {x_const:.2f}")
-        except ZeroDivisionError:
-            pass
+        x_const = -c1 / a1
+        plt.axvline(x_const, color='darkorange', label=f"R1: x = {x_const:.2f}")
     
-    y2 = get_y(a2, b2, c2, x_vals)
-    if y2 is not None:
-        plt.plot(x_vals, y2, label=f"R2: {a2}x + {b2}y + {c2} = 0", color="teal")
-    else:
-        try:
+    # Graficar Recta 2 si se proporcionan
+    if a2 is not None and b2 is not None and c2 is not None:
+        y2 = get_y(a2, b2, c2, x_vals)
+        if y2 is not None:
+            plt.plot(x_vals, y2, label=f"R2: {convertirFormaPendiente(a2, b2, c2)}", color="teal")
+        else:
             x_const = -c2 / a2
             plt.axvline(x_const, color='teal', label=f"R2: x = {x_const:.2f}")
-        except ZeroDivisionError:
-            pass
     
-    if resultado["tipo"] == "interseccion" and resultado["punto"] is not None:
+    if resultado and resultado.get("tipo") == "interseccion" and resultado.get("punto"):
         x_sol, y_sol = resultado["punto"]
         plt.plot(x_sol, y_sol, 'ko', label="Intersección")
     
@@ -142,11 +134,9 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
     plt.xlabel("Eje X")
     plt.ylabel("Eje Y")
     plt.title("Gráfica de las Rectas")
-    plt.legend(loc="upper right")
+    plt.legend()
     plt.grid(True)
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.gca().set_aspect('equal', adjustable='box')
+    plt.axis('equal')
     
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
@@ -154,41 +144,17 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min=-10, x_max=10, y_min
     plt.close()
     return buf
 
-def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
-    plt.figure(figsize=(7, 7))
-    x_vals = np.linspace(x_min, x_max, 400)
-    
-    def get_y(a, b, c, x_array):
-         return None if abs(b) < 1e-14 else (-a * x_array - c) / b
-    y = get_y(a, b, c, x_vals)
-    if y is not None:
-         plt.plot(x_vals, y, label=f"{a}x + {b}y + {c} = 0", color="purple")
+def calcularCoeficientesDesdePuntos(x1, y1, x2, y2):
+    """Dado dos puntos, retorna los coeficientes (a, b, c) de la recta en forma Ax+By+C=0."""
+    if abs(x2 - x1) < 1e-14:
+        return 1, 0, -x1
     else:
-         try:
-             x_const = -c / a
-             plt.axvline(x_const, color="purple", label=f"x = {x_const:.2f}")
-         except ZeroDivisionError:
-             pass
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.axvline(0, color='black', linewidth=0.5)
-    plt.xlabel("Eje X")
-    plt.ylabel("Eje Y")
-    plt.title("Gráfica de la Recta")
-    plt.legend(loc="upper right")
-    plt.grid(True)
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.gca().set_aspect("equal", adjustable="box")
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-    buf.seek(0)
-    plt.close()
-    return buf
+        m = (y2 - y1) / (x2 - x1)
+        return m, -1, y1 - m*x1
 
-# -------------------------------------------------------------------------
-# Rutas de autenticación y navegación
-# -------------------------------------------------------------------------
-@app.route("/login", methods=["GET", "POST"], endpoint="login")
+# --- Rutas de la aplicación ---
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -202,91 +168,98 @@ def login():
             return render_template("login.html")
     return render_template("login.html")
 
-@app.route("/logout", methods=["GET"], endpoint="logout")
+@app.route("/logout")
 def logout():
     session.pop("logged_in", None)
     flash("Sesión cerrada correctamente.")
     return redirect(url_for("login"))
 
-# -------------------------------------------------------------------------
-# Resolver dos ecuaciones
-# -------------------------------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
     if request.method == "POST":
-        try:
-            a1 = float(request.form["a1"])
-            b1 = float(request.form["b1"])
-            c1 = float(request.form["c1"])
-            a2 = float(request.form["a2"])
-            b2 = float(request.form["b2"])
-            c2 = float(request.form["c2"])
-        except ValueError:
-            flash("Por favor ingresa valores numéricos válidos.")
-            return render_template("index.html")
-        
+        # Modo de entrada: "ecuacion" o "puntos"
+        modo = request.form.get("modo", "ecuacion")
+        solo_una = request.form.get("solo_una")  # Checkbox para graficar solo una ecuación
+        rango = {}
         try:
             x_min = float(request.form.get("x_min", -10))
             x_max = float(request.form.get("x_max", 10))
             y_min = float(request.form.get("y_min", -10))
             y_max = float(request.form.get("y_max", 10))
+            rango = {"x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max}
         except ValueError:
-            x_min, x_max, y_min, y_max = -10, 10, -10, 10
+            rango = None
         
-        resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+        try:
+            if modo == "ecuacion":
+                a1 = float(request.form["a1"])
+                b1 = float(request.form["b1"])
+                c1 = float(request.form["c1"])
+                if not solo_una:
+                    a2 = float(request.form["a2"])
+                    b2 = float(request.form["b2"])
+                    c2 = float(request.form["c2"])
+                else:
+                    a2 = b2 = c2 = None
+            elif modo == "puntos":
+                x1_1 = float(request.form["x1_1"])
+                y1_1 = float(request.form["y1_1"])
+                x2_1 = float(request.form["x2_1"])
+                y2_1 = float(request.form["y2_1"])
+                a1, b1, c1 = calcularCoeficientesDesdePuntos(x1_1, y1_1, x2_1, y2_1)
+                if not solo_una:
+                    x1_2 = float(request.form["x1_2"])
+                    y1_2 = float(request.form["y1_2"])
+                    x2_2 = float(request.form["x2_2"])
+                    y2_2 = float(request.form["y2_2"])
+                    a2, b2, c2 = calcularCoeficientesDesdePuntos(x1_2, y1_2, x2_2, y2_2)
+                else:
+                    a2 = b2 = c2 = None
+            else:
+                return render_template("index.html", error="Modo de entrada desconocido.")
+        except ValueError:
+            return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
+        
+        if a2 is not None:
+            resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+        else:
+            resultado = {"tipo": "solo una recta"}
+        
         datos1 = calcularDatosRecta(a1, b1, c1)
-        datos2 = calcularDatosRecta(a2, b2, c2)
+        datos2 = calcularDatosRecta(a2, b2, c2) if a2 is not None else None
         
-        if datos1["pendiente"] is None:
-            pendiente1 = float('inf')
+        # Comparación de pendientes, inclinación y cálculo del ángulo entre rectas
+        if datos2:
+            pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
+            pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+            if abs(pendiente1) > abs(pendiente2):
+                comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
+            elif abs(pendiente2) > abs(pendiente1):
+                comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+            else:
+                comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
+            
+            ang1 = datos1["anguloConEjeX"]
+            ang2 = datos2["anguloConEjeX"]
+            if ang1 > ang2:
+                comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
+            elif ang2 > ang1:
+                comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
+            else:
+                comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
+            
+            m1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
+            m2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+            angulo_entre = calcularAnguloEntreRectas(m1, m2)
+            angulo_texto = f"🌀 Ángulo entre rectas: {angulo_entre:.2f}°"
         else:
-            pendiente1 = datos1["pendiente"]
-        if datos2["pendiente"] is None:
-            pendiente2 = float('inf')
-        else:
-            pendiente2 = datos2["pendiente"]
+            comp_pendiente = comp_inclinacion = angulo_texto = ""
         
-        if abs(pendiente1) > abs(pendiente2):
-            comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
-        elif abs(pendiente2) > abs(pendiente1):
-            comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
-        else:
-            comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
-        
-        ang1 = datos1["anguloConEjeX"]
-        ang2 = datos2["anguloConEjeX"]
-        if ang1 > ang2:
-            comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
-        elif ang2 > ang1:
-            comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
-        else:
-            comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
-        
-        angulo_entre_rectas = angle_between_lines(ang1, ang2)
-        
-        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado, x_min, x_max, y_min, y_max)
+        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado if a2 is not None else None, rango)
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
-        
-        distancia_interseccion_origen = None
-        if resultado["tipo"] == "interseccion" and resultado["punto"]:
-            distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
-        
-        # Guardamos datos en sesión para usar si es necesario
-        session["export_data"] = {
-            "a1": a1, "b1": b1, "c1": c1,
-            "a2": a2, "b2": b2, "c2": c2,
-            "resultado": resultado,
-            "datos1": datos1,
-            "datos2": datos2,
-            "comp_pendiente": comp_pendiente,
-            "comp_inclinacion": comp_inclinacion,
-            "angulo_entre_rectas": angulo_entre_rectas,
-            "distancia_interseccion_origen": distancia_interseccion_origen,
-            "grafico": grafico
-        }
         
         return render_template("resultado.html",
                                resultado=resultado,
@@ -294,74 +267,9 @@ def index():
                                datos2=datos2,
                                comp_pendiente=comp_pendiente,
                                comp_inclinacion=comp_inclinacion,
-                               angulo_entre_rectas=angulo_entre_rectas,
-                               distancia_interseccion_origen=distancia_interseccion_origen,
+                               angulo_texto=angulo_texto,
                                grafico=grafico)
     return render_template("index.html")
-
-# -------------------------------------------------------------------------
-# Resolver una sola ecuación
-# -------------------------------------------------------------------------
-@app.route("/single", methods=["GET", "POST"])
-def single():
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
-    
-    if request.method == "POST":
-        try:
-            a = float(request.form["a"])
-            b = float(request.form["b"])
-            c = float(request.form["c"])
-        except ValueError:
-            flash("Por favor ingresa valores numéricos válidos.")
-            return render_template("single.html")
-        
-        try:
-            x_min = float(request.form.get("x_min", -10))
-            x_max = float(request.form.get("x_max", 10))
-            y_min = float(request.form.get("y_min", -10))
-            y_max = float(request.form.get("y_max", 10))
-        except ValueError:
-            x_min, x_max, y_min, y_max = -10, 10, -10, 10
-        
-        datos = calcularDatosRecta(a, b, c)
-        buf = graficarRectaUnica(a, b, c, x_min, x_max, y_min, y_max)
-        grafico = base64.b64encode(buf.getvalue()).decode("ascii")
-        
-        session["export_data_single"] = {
-            "a": a, "b": b, "c": c,
-            "datos": datos,
-            "grafico": grafico
-        }
-        
-        return render_template("single.html", datos=datos, grafico=grafico)
-    return render_template("single.html")
-
-# -------------------------------------------------------------------------
-# Eliminamos todas las opciones de exportación
-# -------------------------------------------------------------------------
-
-# -------------------------------------------------------------------------
-# Reporte de Errores
-# -------------------------------------------------------------------------
-@app.route("/error_report", methods=["GET", "POST"])
-def error_report():
-    if request.method == "POST":
-        mensaje = request.form.get("mensaje", "")
-        if mensaje:
-            enviar_reporte_error(mensaje)
-            flash("¡Gracias por reportar el error!")
-        else:
-            flash("Debes escribir un mensaje.")
-        return redirect(url_for("index"))
-    return render_template("error_report.html")
-
-# -------------------------------------------------------------------------
-# Donaciones
-# -------------------------------------------------------------------------
-@app.route("/donations")
-def donations():
-    return render_template("donations.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

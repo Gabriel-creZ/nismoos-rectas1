@@ -7,6 +7,30 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script>
+    function toggleModo() {
+      var modo = document.querySelector('input[name="modo"]:checked').value;
+      if(modo === "ecuacion") {
+        document.getElementById("ecuacionInputs").style.display = "block";
+        document.getElementById("puntosInputs").style.display = "none";
+      } else {
+        document.getElementById("ecuacionInputs").style.display = "none";
+        document.getElementById("puntosInputs").style.display = "block";
+      }
+    }
+    function toggleSegundaRecta() {
+      var soloUna = document.getElementById("solo_una").checked;
+      if(soloUna) {
+        document.getElementById("segundaRecta").style.display = "none";
+      } else {
+        document.getElementById("segundaRecta").style.display = "block";
+      }
+    }
+    window.onload = function() {
+      toggleModo();
+      toggleSegundaRecta();
+    }
+  </script>
 </head>
 <body>
   <div class="container">
@@ -16,93 +40,147 @@
     <header class="header">
       <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
       <p class="creator">By: <em>gabriel_cre</em></p>
-      <nav>
-        <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
-        <a href="{{ url_for('single') }}">Ecuación Única</a> |
-        <a href="{{ url_for('error_report') }}">Reportar Error</a> |
-        <a href="{{ url_for('donations') }}">Donaciones</a> |
-        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
-      </nav>
+      <div class="equation-link">
+        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        </a>
+      </div>
     </header>
     
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="error-message">
-          {% for msg in messages %}
-            <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+    {% if error %}
+      <div class="error-message">
+        <p><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+      </div>
+    {% endif %}
     
     <div class="content">
       <div class="form-container">
-        <h2><i class="fas fa-calculator"></i> Ingresar Coeficientes para 2 Ecuaciones</h2>
-        <p class="subtitle">Ingresa los coeficientes de cada recta en la forma a*x + b*y + c = 0</p>
+        <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Datos</h2>
         <div class="instruction">
-          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
+          Selecciona el modo de entrada y proporciona los datos correspondientes.
         </div>
         <form method="POST">
-          <!-- Primera ecuación -->
           <div class="form-group">
-            <label for="a1">a₁:</label>
-            <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
+            <label>Modo de entrada:</label><br>
+            <input type="radio" name="modo" value="ecuacion" checked onchange="toggleModo()"> Ecuación (Ax + By + C = 0)<br>
+            <input type="radio" name="modo" value="puntos" onchange="toggleModo()"> Puntos (dos puntos por recta)
           </div>
-          <div class="form-group">
-            <label for="b1">b₁:</label>
-            <input type="text" name="b1" id="b1" placeholder="Valor de b₁" required>
-          </div>
-          <div class="form-group">
-            <label for="c1">c₁:</label>
-            <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
-          </div>
-          <!-- Segunda ecuación -->
-          <div class="form-group">
-            <label for="a2">a₂:</label>
-            <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
-          </div>
-          <div class="form-group">
-            <label for="b2">b₂:</label>
-            <input type="text" name="b2" id="b2" placeholder="Valor de b₂" required>
-          </div>
-          <div class="form-group">
-            <label for="c2">c₂:</label>
-            <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
-          </div>
-          <!-- Rango opcional -->
-          <fieldset>
-            <legend>Rango de la gráfica (opcional):</legend>
+          
+          <!-- Entradas para Ecuación -->
+          <div id="ecuacionInputs">
+            <h3>Recta 1</h3>
             <div class="form-group">
-              <label for="x_min">X mínimo:</label>
-              <input type="text" name="x_min" id="x_min" placeholder="-10">
+              <label for="a1">a₁:</label>
+              <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
             </div>
             <div class="form-group">
-              <label for="x_max">X máximo:</label>
-              <input type="text" name="x_max" id="x_max" placeholder="10">
+              <label for="b1">b₁:</label>
+              <input type="text" name="b1" id="b1" placeholder="Valor de b₁" required>
             </div>
             <div class="form-group">
-              <label for="y_min">Y mínimo:</label>
-              <input type="text" name="y_min" id="y_min" placeholder="-10">
+              <label for="c1">c₁:</label>
+              <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
+            </div>
+            
+            <div class="form-group">
+              <input type="checkbox" id="solo_una" name="solo_una" onchange="toggleSegundaRecta()">
+              <label for="solo_una">Graficar solo una ecuación</label>
+            </div>
+            
+            <div id="segundaRecta">
+              <h3>Recta 2</h3>
+              <div class="form-group">
+                <label for="a2">a₂:</label>
+                <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
+              </div>
+              <div class="form-group">
+                <label for="b2">b₂:</label>
+                <input type="text" name="b2" id="b2" placeholder="Valor de b₂" required>
+              </div>
+              <div class="form-group">
+                <label for="c2">c₂:</label>
+                <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Entradas para Puntos -->
+          <div id="puntosInputs" style="display:none;">
+            <h3>Recta 1 (Puntos)</h3>
+            <div class="form-group">
+              <label for="x1_1">x₁:</label>
+              <input type="text" name="x1_1" id="x1_1" placeholder="Valor de x₁" required>
             </div>
             <div class="form-group">
-              <label for="y_max">Y máximo:</label>
-              <input type="text" name="y_max" id="y_max" placeholder="10">
+              <label for="y1_1">y₁:</label>
+              <input type="text" name="y1_1" id="y1_1" placeholder="Valor de y₁" required>
             </div>
-          </fieldset>
-          <button type="submit" class="btn"><i class="fas fa-calculator"></i> Calcular</button>
+            <div class="form-group">
+              <label for="x2_1">x₂:</label>
+              <input type="text" name="x2_1" id="x2_1" placeholder="Valor de x₂" required>
+            </div>
+            <div class="form-group">
+              <label for="y2_1">y₂:</label>
+              <input type="text" name="y2_1" id="y2_1" placeholder="Valor de y₂" required>
+            </div>
+            
+            <div class="form-group">
+              <input type="checkbox" id="solo_una" name="solo_una" onchange="toggleSegundaRecta()">
+              <label for="solo_una">Graficar solo una recta</label>
+            </div>
+            
+            <div id="segundaRecta">
+              <h3>Recta 2 (Puntos)</h3>
+              <div class="form-group">
+                <label for="x1_2">x₁:</label>
+                <input type="text" name="x1_2" id="x1_2" placeholder="Valor de x₁" required>
+              </div>
+              <div class="form-group">
+                <label for="y1_2">y₁:</label>
+                <input type="text" name="y1_2" id="y1_2" placeholder="Valor de y₁" required>
+              </div>
+              <div class="form-group">
+                <label for="x2_2">x₂:</label>
+                <input type="text" name="x2_2" id="x2_2" placeholder="Valor de x₂" required>
+              </div>
+              <div class="form-group">
+                <label for="y2_2">y₂:</label>
+                <input type="text" name="y2_2" id="y2_2" placeholder="Valor de y₂" required>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Rango de gráfica opcional -->
+          <h3>Rango de la Gráfica (Opcional)</h3>
+          <div class="form-group">
+            <label for="x_min">x mínimo:</label>
+            <input type="text" name="x_min" id="x_min" placeholder="-10">
+          </div>
+          <div class="form-group">
+            <label for="x_max">x máximo:</label>
+            <input type="text" name="x_max" id="x_max" placeholder="10">
+          </div>
+          <div class="form-group">
+            <label for="y_min">y mínimo:</label>
+            <input type="text" name="y_min" id="y_min" placeholder="-10">
+          </div>
+          <div class="form-group">
+            <label for="y_max">y máximo:</label>
+            <input type="text" name="y_max" id="y_max" placeholder="10">
+          </div>
+          
+          <button type="submit" class="btn">
+            <i class="fas fa-calculator"></i> Calcular
+          </button>
         </form>
       </div>
     </div>
     
-    <!-- Botón externo al final -->
-    <div class="external-link-box">
-      <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-        <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-      </a>
-    </div>
-    
     <div class="footer">
-      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <br>
+      <a href="https://www.paypal.com/donate?business=castilloreyesgabriel7@gmail.com" target="_blank" class="btn">Donar con PayPal</a>
+      <a href="mailto:castilloreyesgabriel4@gmail.com" class="btn">Reportar Error</a>
     </div>
   </div>
 </body>
