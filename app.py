@@ -18,10 +18,10 @@ app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
 # Configuración SMTP para reporte de errores (modificar según tu servidor)
-SMTP_SERVER = 'smtp.tudominio.com'
+SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
-SMTP_USER = 'tuusuario@tudominio.com'
-SMTP_PASSWORD = 'tucontraseña'
+SMTP_USER = 'castilloreyesgabriel4@gmail.com'
+SMTP_PASSWORD = 'wkiqrqkcvhoirdyr'
 
 # --- Funciones de cálculo y graficado ---
 
