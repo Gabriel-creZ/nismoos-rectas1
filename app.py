@@ -30,11 +30,11 @@ def enviar_reporte_error(mensaje):
     destinatario = "castilloreyesgabriel4@gmail.com"
     asunto = "Reporte de Error - Instant Math Solver"
     
-    # Configuración SMTP (reemplaza estos datos por los tuyos)
-    smtp_server = "castilloreyesgabriel4@gmail.com"   # Ej: "smtp.gmail.com"
-    smtp_port = 465                  # Puerto SMTP
-    correo_origen = "castilloreyesgabriel4@gmail.com"      # Ej: "tu_correo@gmail.com"
-    password = "fjgf igtf rxmq usxc"         # Contraseña o "Contraseña de Aplicación"
+    # Configuración SMTP (reemplaza estos valores por los tuyos)
+    smtp_server = "TU_SMTP_SERVER"   # ej. "smtp.gmail.com"
+    smtp_port = 587                  # Puerto SMTP
+    correo_origen = "TU_CORREO"      # ej. "tu_correo@gmail.com"
+    password = "TU_PASSWORD"         # Contraseña o contraseña de aplicación
     
     msg = MIMEText(mensaje)
     msg["Subject"] = asunto
