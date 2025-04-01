@@ -10,18 +10,12 @@
 </head>
 <body>
   <div class="container">
-    <!-- La imagen label-image ahora es un enlace -->
     <a href="https://bachantoniomadna.milaulas.com" target="_blank" class="label-image-container">
       <img src="{{ url_for('static', filename='images/label-image.png') }}" alt="Logo Instant Math Solver" class="label-image">
     </a>
     <header class="header">
       <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
       <p class="creator">By: <em>gabriel_cre</em></p>
-      <div class="equation-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
-      </div>
     </header>
     
     {% if error %}
@@ -34,7 +28,7 @@
       <div class="form-container">
         <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Coeficientes</h2>
         <div class="instruction">
-          Ingresa los coeficientes para cada recta en la forma a*x + b*y + c = 0.<br>
+          Ingresa los coeficientes para cada recta en la forma Ax + By + C = 0.<br>
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
         <form method="POST">
@@ -69,8 +63,27 @@
       </div>
     </div>
     
+    <!-- Sección inferior con enlaces adicionales -->
+    <div class="extra-links" style="text-align: center; margin-top: 20px;">
+      <div class="equation-link">
+        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        </a>
+      </div>
+      <div class="donation-link" style="margin-top:10px;">
+        <a href="{{ url_for('donar') }}" class="btn">
+          <i class="fas fa-donate"></i> Donar
+        </a>
+      </div>
+      <div class="report-link" style="margin-top:10px;">
+        <a href="{{ url_for('reporte') }}" class="btn">
+          <i class="fas fa-bug"></i> Reportar Error
+        </a>
+      </div>
+    </div>
+    
     <div class="footer">
-      <em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
   </div>
 </body>

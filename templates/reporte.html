@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Errores - Instant Math Solver</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-container">
+    <header class="header">
+      <h1>Reporte de Errores</h1>
+    </header>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="error-message">
+          {% for msg in messages %}
+            <p><i class="fas fa-exclamation-circle"></i> {{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('reporte') }}" class="login-form">
+      <div class="form-group">
+        <label for="email"><i class="fas fa-envelope"></i> Tu correo:</label>
+        <input type="email" name="email" id="email" placeholder="correo@ejemplo.com" required>
+      </div>
+      <div class="form-group">
+        <label for="mensaje"><i class="fas fa-comment"></i> Mensaje:</label>
+        <textarea name="mensaje" id="mensaje" rows="5" placeholder="Describe el error o sugerencia" required style="width:100%; padding:10px;"></textarea>
+      </div>
+      <button type="submit" class="login-btn"><i class="fas fa-paper-plane"></i> Enviar Reporte</button>
+    </form>
+    <a href="{{ url_for('index') }}" class="btn" style="margin-top:15px;"><i class="fas fa-arrow-left"></i> Volver</a>
+    <div class="footer">
+      <em>@ 2025 Instant Math Solver</em>
+    </div>
+  </div>
+</body>
+</html>

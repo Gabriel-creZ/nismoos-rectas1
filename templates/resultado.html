@@ -10,24 +10,25 @@
 </head>
 <body>
   <div class="container">
-    <!-- La imagen label-image es un enlace -->
     <a href="https://bachantoniomadna.milaulas.com" target="_blank" class="label-image-container">
       <img src="{{ url_for('static', filename='images/label-image.png') }}" alt="Logo Instant Math Solver" class="label-image">
     </a>
     <header class="header">
       <h1><i class="fas fa-ruler"></i> Instant Math Solver: Resolución de Rectas <i class="fas fa-ruler"></i></h1>
       <p class="creator">By: <em>gabriel_cre</em></p>
-      <div class="equation-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
+      <div class="extra-links" style="text-align: center; margin-top: 10px;">
+        <a href="{{ url_for('donar') }}" class="btn"><i class="fas fa-donate"></i> Donar</a>
+        <a href="{{ url_for('reporte') }}" class="btn"><i class="fas fa-bug"></i> Reportar Error</a>
       </div>
     </header>
     
     <div class="content">
       <div class="results-container">
         {% if resultado.tipo == "interseccion" and resultado.punto %}
-          <h2 class="results-title">✅ Punto de intersección: (x, y) = ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</h2>
+          <h2 class="results-title">✅ Punto de intersección: ({{ resultado.punto[0] }}, {{ resultado.punto[1] }})</h2>
+          {% if distancia_interseccion %}
+            <p class="result-item">Distancia desde el origen hasta la intersección: {{ distancia_interseccion }}</p>
+          {% endif %}
         {% elif resultado.tipo == "paralelas" %}
           <h2 class="results-title">❌ Las rectas son paralelas (no existe punto de intersección).</h2>
         {% elif resultado.tipo == "coincidentes" %}
@@ -57,11 +58,20 @@
         <div class="result-item">
           <p>{{ comp_pendiente }}</p>
           <p>{{ comp_inclinacion }}</p>
+          {% if angulo_entre is not none %}
+            <p>📏 Ángulo entre rectas: {{ angulo_entre }}°</p>
+          {% endif %}
         </div>
         
         <div class="result-item">
-          <h3><i class="fas fa-chart-pie"></i> Gráfica de las Rectas</h3>
-          <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de las rectas" class="triangle-image">
+          <h3><i class="fas fa-chart-pie"></i> Gráfica Estática de las Rectas</h3>
+          <img src="data:image/png;base64,{{ grafico_estatico }}" alt="Gráfica de las rectas" class="triangle-image">
+        </div>
+        
+        <div class="result-item">
+          <h3><i class="fas fa-chart-line"></i> Gráfica Interactiva</h3>
+          <!-- Se inyecta el HTML interactivo de Plotly -->
+          {{ grafico_interactivo|safe }}
         </div>
         
         <div class="result-item">
@@ -71,7 +81,7 @@
     </div>
     
     <div class="footer">
-      <em>@ 2025 Instant Math Solver - Herramienta con fines educativos desarrollada por Gabriel Castillo - Alumno AMRD</em>
+      <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
   </div>
 </body>
