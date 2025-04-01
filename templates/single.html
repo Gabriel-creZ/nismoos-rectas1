@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ecuación Única - Instant Math Solver</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -22,6 +22,11 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
+      <div class="external-link">
+        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        </a>
+      </div>
     </header>
     
     {% with messages = get_flashed_messages() %}
@@ -45,6 +50,9 @@
         <div class="result-item">
           <h3>Gráfica de la Recta</h3>
           <img src="data:image/png;base64,{{ grafico }}" alt="Gráfica de la recta" class="triangle-image">
+        </div>
+        <div class="result-item">
+          <a href="{{ url_for('export_pdf_single') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
         </div>
         <div class="result-item">
           <a href="{{ url_for('single') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
@@ -91,12 +99,6 @@
           </form>
         </div>
       {% endif %}
-    </div>
-    
-    <div class="triangle-link-container">
-      <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank" class="triangle-link">
-        <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-      </a>
     </div>
     
     <div class="footer">
