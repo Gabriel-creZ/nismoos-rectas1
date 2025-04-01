@@ -1,7 +1,9 @@
 import math
 import io
+import os
 import base64
 import smtplib
+import tempfile
 from email.mime.text import MIMEText
 
 import numpy as np
@@ -15,7 +17,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 app = Flask(__name__)
 app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
 
-# Configuración de sesión (para mantener el login activo)
+# Configuración de sesión
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
@@ -27,7 +29,7 @@ def enviar_reporte_error(mensaje):
     Envía un correo electrónico con el reporte de error.
     Configura los datos SMTP con tus credenciales reales.
     """
-    destinatario = "castilloreyesgabriel4@gmail.com"  # Donde se recibirán los reportes
+    destinatario = "castilloreyesgabriel4@gmail.com"
     asunto = "Reporte de Error - Instant Math Solver"
     
     # Configuración SMTP (reemplaza estos datos por los tuyos)
@@ -185,9 +187,9 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.close()
     return buf
 
-def generar_pdf_resultado(textos):
+def generar_pdf_resultado(textos, image_data=None):
     """
-    Genera un PDF con las líneas de texto en la lista 'textos'.
+    Genera un PDF con los textos dados y, si se proporciona, incorpora la imagen.
     Devuelve un objeto BytesIO con el PDF generado o None en caso de error.
     """
     pdf = FPDF()
@@ -195,10 +197,17 @@ def generar_pdf_resultado(textos):
         pdf.add_page()
         pdf.set_font("Arial", "B", 16)
         pdf.cell(0, 10, "Resultados - Instant Math Solver", ln=True, align="C")
-        pdf.ln(10)
+        pdf.ln(5)
         pdf.set_font("Arial", size=12)
         for linea in textos:
             pdf.cell(0, 10, linea, ln=True)
+        if image_data is not None:
+            temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+            temp.write(image_data.getvalue())
+            temp.close()
+            current_y = pdf.get_y() if hasattr(pdf, "get_y") else pdf.h / 2
+            pdf.image(temp.name, x=10, y=current_y + 10, w=pdf.w - 20)
+            os.unlink(temp.name)
         pdf.ln(10)
         pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
     except Exception as e:
@@ -296,7 +305,6 @@ def index():
         if resultado["tipo"] == "interseccion" and resultado["punto"]:
             distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
         
-        # Guardar datos en sesión para exportar PDF o imagen
         session["export_data"] = {
             "a1": a1, "b1": b1, "c1": c1,
             "a2": a2, "b2": b2, "c2": c2,
@@ -360,7 +368,7 @@ def single():
     return render_template("single.html")
 
 # -------------------------------------------------------------------------
-# Exportar PDF para 2 ecuaciones
+# Exportar PDF para 2 ecuaciones (con imagen del gráfico)
 # -------------------------------------------------------------------------
 @app.route("/export/pdf")
 def export_pdf():
@@ -383,14 +391,20 @@ def export_pdf():
     if export_data["distancia_interseccion_origen"] is not None:
         textos.append(f"Distancia intersección - origen: {export_data['distancia_interseccion_origen']}")
     
-    pdf_io = generar_pdf_resultado(textos)
+    try:
+        image_data = io.BytesIO(base64.b64decode(export_data["grafico"]))
+    except Exception as e:
+        image_data = None
+        print(f"Error al decodificar imagen: {e}")
+    
+    pdf_io = generar_pdf_resultado(textos, image_data)
     if pdf_io is None:
         flash("Error al generar el PDF.")
         return redirect(url_for("index"))
     return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados.pdf")
 
 # -------------------------------------------------------------------------
-# Exportar PDF para ecuación única
+# Exportar PDF para ecuación única (con imagen)
 # -------------------------------------------------------------------------
 @app.route("/export_single/pdf")
 def export_pdf_single():
@@ -405,14 +419,20 @@ def export_pdf_single():
     textos.append(f"Ángulo con eje X: {export_data['datos']['anguloConEjeX']}°")
     textos.append(f"Distancia al origen: {export_data['datos']['distanciaAlOrigen']}")
     
-    pdf_io = generar_pdf_resultado(textos)
+    try:
+        image_data = io.BytesIO(base64.b64decode(export_data["grafico"]))
+    except Exception as e:
+        image_data = None
+        print(f"Error al decodificar imagen: {e}")
+    
+    pdf_io = generar_pdf_resultado(textos, image_data)
     if pdf_io is None:
         flash("Error al generar el PDF.")
         return redirect(url_for("single"))
     return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados_unica.pdf")
 
 # -------------------------------------------------------------------------
-# Exportar imagen del gráfico (opción adicional)
+# Exportar imagen del gráfico
 # -------------------------------------------------------------------------
 @app.route("/export/image")
 def export_image():
@@ -420,7 +440,11 @@ def export_image():
     if not export_data or "grafico" not in export_data:
         flash("No hay imagen para exportar.")
         return redirect(url_for("index"))
-    img_data = base64.b64decode(export_data["grafico"])
+    try:
+        img_data = base64.b64decode(export_data["grafico"])
+    except Exception as e:
+        flash("Error al obtener la imagen.")
+        return redirect(url_for("index"))
     mem = io.BytesIO(img_data)
     mem.seek(0)
     return send_file(mem, mimetype="image/png", as_attachment=True, download_name="grafico.png")

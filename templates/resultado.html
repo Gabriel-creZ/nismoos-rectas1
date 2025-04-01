@@ -15,6 +15,7 @@
     </a>
     <header class="header">
       <h1>Resultados</h1>
+      <p class="creator">By: <em>gabriel_cre</em></p>
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
         <a href="{{ url_for('single') }}">Ecuación Única</a> |
@@ -22,11 +23,6 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
-      <div class="external-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
-      </div>
     </header>
     
     <div class="content">
@@ -40,7 +36,7 @@
         <h2 class="results-title">❓ Caso indefinido.</h2>
       {% endif %}
       
-      <div class="result-item">
+      <div class="result-item decorated">
         <h3>=== Datos de la Recta 1 ===</h3>
         <p>✴️ Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
         <p>🔸 Intersección con eje X: {{ datos1.interseccionX }}</p>
@@ -49,7 +45,7 @@
         <p>📏 Distancia al origen: {{ datos1.distanciaAlOrigen }}</p>
       </div>
       
-      <div class="result-item">
+      <div class="result-item decorated">
         <h3>=== Datos de la Recta 2 ===</h3>
         <p>✴️ Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
         <p>🔸 Intersección con eje X: {{ datos2.interseccionX }}</p>
@@ -58,7 +54,7 @@
         <p>📏 Distancia al origen: {{ datos2.distanciaAlOrigen }}</p>
       </div>
       
-      <div class="result-item">
+      <div class="result-item decorated">
         <p>{{ comp_pendiente }}</p>
         <p>{{ comp_inclinacion }}</p>
         <p>📊 Ángulo entre rectas: {{ angulo_entre_rectas }}°</p>

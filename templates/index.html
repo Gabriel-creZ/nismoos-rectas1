@@ -23,11 +23,6 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
-      <div class="external-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
-      </div>
     </header>
     
     {% with messages = get_flashed_messages() %}
@@ -41,10 +36,10 @@
     {% endwith %}
     
     <div class="content">
-      <div class="form-container">
+      <div class="form-container decorated">
         <h2><i class="fas fa-calculator"></i> Ingresar Coeficientes para 2 Ecuaciones</h2>
+        <p class="subtitle">Ingresa los coeficientes de cada recta en la forma a*x + b*y + c = 0</p>
         <div class="instruction">
-          Ingresa los coeficientes para cada recta en la forma a*x + b*y + c = 0.<br>
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
         <form method="POST">
@@ -97,6 +92,13 @@
           <button type="submit" class="btn"><i class="fas fa-calculator"></i> Calcular</button>
         </form>
       </div>
+    </div>
+    
+    <!-- Botón externo movido al final con recuadro azul -->
+    <div class="external-link-box">
+      <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+        <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+      </a>
     </div>
     
     <div class="footer">

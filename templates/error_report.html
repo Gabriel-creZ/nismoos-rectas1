@@ -12,6 +12,7 @@
   <div class="container">
     <header class="header">
       <h1>Reportar Error</h1>
+      <p class="creator">By: <em>gabriel_cre</em></p>
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
         <a href="{{ url_for('single') }}">Ecuación Única</a> |
@@ -19,9 +20,11 @@
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
     </header>
+    
     <div class="content">
-      <div class="form-container">
+      <div class="form-container decorated">
         <h2>Formulario de Reporte</h2>
+        <p class="subtitle">Cuéntanos qué error encontraste para mejorar la herramienta.</p>
         <form method="POST">
           <div class="form-group">
             <label for="mensaje">Describe el error:</label>
@@ -31,6 +34,7 @@
         </form>
       </div>
     </div>
+    
     <div class="footer">
       <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>

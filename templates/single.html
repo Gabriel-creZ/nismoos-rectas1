@@ -15,6 +15,7 @@
     </a>
     <header class="header">
       <h1>Ecuación Única</h1>
+      <p class="creator">By: <em>gabriel_cre</em></p>
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
         <a href="{{ url_for('single') }}">Ecuación Única</a> |
@@ -22,7 +23,7 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
-      <div class="external-link">
+      <div class="external-link-box">
         <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
           <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
         </a>
@@ -41,7 +42,7 @@
     
     <div class="content">
       {% if datos %}
-        <div class="result-item">
+        <div class="result-item decorated">
           <h3>Resultados</h3>
           <p>✴️ Pendiente: {{ datos.pendiente if datos.pendiente is not none else "Vertical" }}</p>
           <p>📐 Ángulo con eje X: {{ datos.anguloConEjeX }}°</p>
@@ -58,11 +59,9 @@
           <a href="{{ url_for('single') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
         </div>
       {% else %}
-        <div class="form-container">
+        <div class="form-container decorated">
           <h2>Ingresar Coeficientes</h2>
-          <div class="instruction">
-            Ingresa los coeficientes de la ecuación en la forma a*x + b*y + c = 0.
-          </div>
+          <p class="subtitle">Ingresa los coeficientes de la ecuación en la forma a*x + b*y + c = 0</p>
           <form method="POST">
             <div class="form-group">
               <label for="a">a:</label>

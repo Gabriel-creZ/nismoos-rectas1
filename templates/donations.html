@@ -12,6 +12,7 @@
   <div class="container">
     <header class="header">
       <h1>Donaciones</h1>
+      <p class="creator">By: <em>gabriel_cre</em></p>
       <nav>
         <a href="{{ url_for('index') }}">Resolver 2 Ecuaciones</a> |
         <a href="{{ url_for('single') }}">Ecuación Única</a> |
@@ -19,12 +20,11 @@
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
     </header>
+    
     <div class="content">
-      <div class="form-container">
+      <div class="form-container decorated">
         <h2>Apoya el Proyecto</h2>
-        <p>
-          Si te gusta esta herramienta y deseas apoyar su desarrollo, ¡considera hacer una donación!
-        </p>
+        <p class="subtitle">Si te gusta esta herramienta y deseas apoyar su desarrollo, ¡considera hacer una donación!</p>
         <p>
           Puedes donar a través de PayPal:
         </p>
@@ -34,6 +34,7 @@
         <a href="https://www.paypal.com/donate?hosted_button_id=XXXXXX" target="_blank" class="btn"><i class="fas fa-donate"></i> Donar con PayPal</a>
       </div>
     </div>
+    
     <div class="footer">
       <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
