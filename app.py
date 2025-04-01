@@ -206,7 +206,6 @@ def generar_pdf_resultado(textos):
         return None
 
     try:
-        # Utilizamos dest="S" para obtener el PDF como string
         pdf_data = pdf.output(dest="S").encode("latin1")
     except Exception as e:
         print(f"Error al escribir PDF: {e}")
@@ -216,23 +215,8 @@ def generar_pdf_resultado(textos):
     return mem
 
 # -------------------------------------------------------------------------
-# Ruta para exportar imagen del gráfico (opción adicional)
-# -------------------------------------------------------------------------
-@app.route("/export/image")
-def export_image():
-    export_data = session.get("export_data")
-    if not export_data or "grafico" not in export_data:
-        flash("No hay imagen para exportar.")
-        return redirect(url_for("index"))
-    img_data = base64.b64decode(export_data["grafico"])
-    mem = io.BytesIO(img_data)
-    mem.seek(0)
-    return send_file(mem, mimetype="image/png", as_attachment=True, download_name="grafico.png")
-
-# -------------------------------------------------------------------------
 # Rutas de autenticación y navegación
 # -------------------------------------------------------------------------
-# Incluir HEAD para evitar errores en Render.com
 @app.route("/login", methods=["GET", "POST", "HEAD"], endpoint="login")
 def login():
     if request.method == "POST":
@@ -345,7 +329,6 @@ def single():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
-    # Si ya se procesó un POST y existen resultados, solo mostrar resultados
     if request.method == "POST":
         try:
             a = float(request.form["a"])
