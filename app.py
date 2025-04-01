@@ -11,7 +11,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from fpdf import FPDF
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 
 app = Flask(__name__)
@@ -19,7 +18,7 @@ app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
 
 # Configuración de sesión
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
 
 # -------------------------------------------------------------------------
 # Función para enviar reporte de error por correo
@@ -187,46 +186,10 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.close()
     return buf
 
-def generar_pdf_resultado(textos, image_data=None):
-    """
-    Genera un PDF con los textos dados y, si se proporciona, incorpora la imagen.
-    Devuelve un objeto BytesIO con el PDF generado o None en caso de error.
-    """
-    pdf = FPDF()
-    try:
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 16)
-        pdf.cell(0, 10, "Resultados - Instant Math Solver", ln=True, align="C")
-        pdf.ln(5)
-        pdf.set_font("Arial", size=12)
-        for linea in textos:
-            pdf.cell(0, 10, linea, ln=True)
-        if image_data is not None:
-            temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-            temp.write(image_data.getvalue())
-            temp.close()
-            current_y = pdf.get_y() if hasattr(pdf, "get_y") else pdf.h / 2
-            pdf.image(temp.name, x=10, y=current_y + 10, w=pdf.w - 20)
-            os.unlink(temp.name)
-        pdf.ln(10)
-        pdf.cell(0, 10, "Exportado desde Instant Math Solver", ln=True, align="C")
-    except Exception as e:
-        print(f"Error al generar PDF: {e}")
-        return None
-
-    try:
-        pdf_data = pdf.output(dest="S").encode("latin1")
-    except Exception as e:
-        print(f"Error al escribir PDF: {e}")
-        return None
-    mem = io.BytesIO(pdf_data)
-    mem.seek(0)
-    return mem
-
 # -------------------------------------------------------------------------
 # Rutas de autenticación y navegación
 # -------------------------------------------------------------------------
-@app.route("/login", methods=["GET", "POST", "HEAD"], endpoint="login")
+@app.route("/login", methods=["GET", "POST"], endpoint="login")
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -240,7 +203,7 @@ def login():
             return render_template("login.html")
     return render_template("login.html")
 
-@app.route("/logout", methods=["GET", "HEAD"], endpoint="logout")
+@app.route("/logout", methods=["GET"], endpoint="logout")
 def logout():
     session.pop("logged_in", None)
     flash("Sesión cerrada correctamente.")
@@ -368,71 +331,7 @@ def single():
     return render_template("single.html")
 
 # -------------------------------------------------------------------------
-# Exportar PDF para 2 ecuaciones (con imagen del gráfico)
-# -------------------------------------------------------------------------
-@app.route("/export/pdf")
-def export_pdf():
-    export_data = session.get("export_data")
-    if not export_data:
-        flash("No hay datos para exportar.")
-        return redirect(url_for("index"))
-    
-    textos = []
-    textos.append(f"Recta 1: {export_data['a1']}x + {export_data['b1']}y + {export_data['c1']} = 0")
-    textos.append(f"Recta 2: {export_data['a2']}x + {export_data['b2']}y + {export_data['c2']} = 0")
-    textos.append(f"Tipo de solución: {export_data['resultado']['tipo']}")
-    if export_data["resultado"]["punto"]:
-        textos.append(f"Punto de intersección: {export_data['resultado']['punto']}")
-    textos.append(f"Pendiente Recta 1: {export_data['datos1']['pendiente']}")
-    textos.append(f"Pendiente Recta 2: {export_data['datos2']['pendiente']}")
-    textos.append(f"Ángulo Recta 1: {export_data['datos1']['anguloConEjeX']}°")
-    textos.append(f"Ángulo Recta 2: {export_data['datos2']['anguloConEjeX']}°")
-    textos.append(f"Ángulo entre rectas: {export_data['angulo_entre_rectas']}°")
-    if export_data["distancia_interseccion_origen"] is not None:
-        textos.append(f"Distancia intersección - origen: {export_data['distancia_interseccion_origen']}")
-    
-    try:
-        image_data = io.BytesIO(base64.b64decode(export_data["grafico"]))
-    except Exception as e:
-        image_data = None
-        print(f"Error al decodificar imagen: {e}")
-    
-    pdf_io = generar_pdf_resultado(textos, image_data)
-    if pdf_io is None:
-        flash("Error al generar el PDF.")
-        return redirect(url_for("index"))
-    return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados.pdf")
-
-# -------------------------------------------------------------------------
-# Exportar PDF para ecuación única (con imagen)
-# -------------------------------------------------------------------------
-@app.route("/export_single/pdf")
-def export_pdf_single():
-    export_data = session.get("export_data_single")
-    if not export_data:
-        flash("No hay datos para exportar.")
-        return redirect(url_for("single"))
-    
-    textos = []
-    textos.append(f"Ecuación: {export_data['a']}x + {export_data['b']}y + {export_data['c']} = 0")
-    textos.append(f"Pendiente: {export_data['datos']['pendiente']}")
-    textos.append(f"Ángulo con eje X: {export_data['datos']['anguloConEjeX']}°")
-    textos.append(f"Distancia al origen: {export_data['datos']['distanciaAlOrigen']}")
-    
-    try:
-        image_data = io.BytesIO(base64.b64decode(export_data["grafico"]))
-    except Exception as e:
-        image_data = None
-        print(f"Error al decodificar imagen: {e}")
-    
-    pdf_io = generar_pdf_resultado(textos, image_data)
-    if pdf_io is None:
-        flash("Error al generar el PDF.")
-        return redirect(url_for("single"))
-    return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados_unica.pdf")
-
-# -------------------------------------------------------------------------
-# Exportar imagen del gráfico
+# Exportar imagen del gráfico (método de exportación alternativo)
 # -------------------------------------------------------------------------
 @app.route("/export/image")
 def export_image():

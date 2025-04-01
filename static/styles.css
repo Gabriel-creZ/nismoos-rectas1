@@ -1,144 +1,105 @@
-/* Fuentes y colores básicos */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+:root {
+  --primary-color: #2e7d32;
+  --secondary-color: #388e3c;
+  --accent-color: #66bb6a;
+  --light-color: #f8f9fa;
+  --dark-color: #2e2e2e;
+  --success-color: #4cc9f0;
+  --warning-color: #f72585;
+  --background-color: #5ab361;
+  --equation-link-color: #4a6fa5;
+  --equation-link-hover: #3a5a8a;
+  --button-hover: #81c784;
+}
 
+/* Fondo general con color verde */
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #e8f5e9;
-  color: #2e2e2e;
+  background-color: var(--background-color);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  color: var(--dark-color);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Contenedor blanco central */
 .container {
-  max-width: 800px;
+  background: white;
+  max-width: 600px;
+  width: 90%;
   margin: 40px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
-/* Encabezado y navegación */
+/* Imagen label centrada */
+.label-image-container {
+  text-align: center;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.label-image {
+  max-width: 200px;
+  height: auto;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.label-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
 .header {
   text-align: center;
   margin-bottom: 20px;
 }
+
 .header h1 {
-  margin: 0;
   font-size: 2rem;
-}
-.creator {
-  font-size: 0.8rem;
-  color: #555;
   margin-bottom: 10px;
 }
-nav a {
-  margin: 0 5px;
-  text-decoration: none;
-  color: #007BFF;
-  font-weight: 500;
-}
-nav a:hover {
-  text-decoration: underline;
+
+.creator {
+  text-align: center;
+  color: var(--secondary-color);
+  margin: 5px 0 15px 0;
 }
 
-/* Botones */
-.btn {
-  background-color: #007BFF;
-  color: #fff;
-  border: none;
+/* Enlace de ecuaciones */
+.equation-link {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.equation-link a {
+  background-color: var(--equation-link-color);
+  color: white;
   padding: 12px 20px;
-  border-radius: 6px;
+  border-radius: 8px;
   text-decoration: none;
   display: inline-block;
-  margin: 10px 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.btn:hover {
-  background-color: #0056b3;
-}
-
-/* Formularios y campos */
-.form-container {
-  margin: 20px auto;
-  padding: 20px;
-}
-.form-container.decorated {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  padding: 15px;
-  margin-bottom: 20px;
-}
-.form-group {
-  margin-bottom: 15px;
-  text-align: left;
-}
-.form-group label {
-  display: block;
+  transition: all 0.3s;
   font-weight: 500;
-  margin-bottom: 5px;
-}
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-fieldset {
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-}
-legend {
-  padding: 0 5px;
-  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Enlaces externos */
-.external-link-box {
-  border: 2px solid #007BFF;
-  padding: 10px;
-  text-align: center;
-  margin: 20px auto;
-  max-width: 600px;
-  border-radius: 8px;
-}
-.external-link-box a {
-  color: #007BFF;
-  text-decoration: none;
-  font-weight: bold;
-}
-.external-link-box a:hover {
-  text-decoration: underline;
+.equation-link a:hover {
+  background-color: var(--equation-link-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Resultados */
-.result-item {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-.result-item.decorated {
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-}
-
-/* Imágenes */
-.label-image-container img,
-.triangle-image {
-  max-width: 100%;
-  display: block;
-  margin: 0 auto;
-  border-radius: 8px;
+.equation-link a i {
+  margin-right: 8px;
 }
 
 /* Mensajes de error */
@@ -151,12 +112,187 @@ legend {
   text-align: center;
 }
 
+/* Formularios */
+.login-form .form-group,
+.form-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--dark-color);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+/* Botones centrados */
+.login-btn,
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  margin: 10px auto;
+  box-sizing: border-box;
+}
+
+.login-btn:hover,
+.btn:hover {
+  background-color: var(--button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenido y resultados */
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+}
+
+.form-title {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.instruction {
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.results-container {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+.results-title {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.result-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.triangle-image {
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Login container */
+.login-container {
+  background: white;
+  max-width: 400px;
+  width: 90%;
+  margin: 50px auto;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  box-sizing: border-box;
+}
+
 /* Footer */
 .footer {
   text-align: center;
-  margin-top: 20px;
-  font-size: 0.8rem;
-  color: #555;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
+  margin-top: 30px;
+  padding-top: 20px;
+  color: #6c757d;
+  font-size: 0.9rem;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.footer em {
+  font-style: italic;
+  color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .label-image {
+    max-width: 150px;
+  }
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  .form-group input {
+    padding: 10px 12px;
+  }
+  .btn, .login-btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+  }
+}
+
+/* Estilo para el recuadro azul del enlace externo */
+.external-link-box {
+  border: 2px solid #007BFF;
+  padding: 10px;
+  text-align: center;
+  margin-top: 30px;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 8px;
+}
+
+.external-link-box a {
+  color: #007BFF;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.external-link-box a:hover {
+  text-decoration: underline;
 }

@@ -36,7 +36,7 @@
         <h2 class="results-title">❓ Caso indefinido.</h2>
       {% endif %}
       
-      <div class="result-item decorated">
+      <div class="result-item">
         <h3>=== Datos de la Recta 1 ===</h3>
         <p>✴️ Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
         <p>🔸 Intersección con eje X: {{ datos1.interseccionX }}</p>
@@ -45,7 +45,7 @@
         <p>📏 Distancia al origen: {{ datos1.distanciaAlOrigen }}</p>
       </div>
       
-      <div class="result-item decorated">
+      <div class="result-item">
         <h3>=== Datos de la Recta 2 ===</h3>
         <p>✴️ Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
         <p>🔸 Intersección con eje X: {{ datos2.interseccionX }}</p>
@@ -54,7 +54,7 @@
         <p>📏 Distancia al origen: {{ datos2.distanciaAlOrigen }}</p>
       </div>
       
-      <div class="result-item decorated">
+      <div class="result-item">
         <p>{{ comp_pendiente }}</p>
         <p>{{ comp_inclinacion }}</p>
         <p>📊 Ángulo entre rectas: {{ angulo_entre_rectas }}°</p>
@@ -69,7 +69,7 @@
       </div>
       
       <div class="result-item">
-        <a href="{{ url_for('export_pdf') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
+        <!-- Solo queda la opción de exportar la imagen -->
         <a href="{{ url_for('export_image') }}" class="btn"><i class="fas fa-image"></i> Exportar Imagen</a>
       </div>
       
