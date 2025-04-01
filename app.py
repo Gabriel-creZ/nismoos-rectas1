@@ -231,6 +231,113 @@ def graficarUnaRectaInteractivo(a, b, c):
                       template="plotly_white")
     return fig.to_html(full_html=False)
 
+def graficarTresRectas(a1, b1, c1, a2, b2, c2, a3, b3, c3, intersecciones):
+    plt.figure(figsize=(7, 7))
+    x_vals = np.linspace(-10, 10, 400)
+    def get_y(a, b, c, x_array):
+        return None if abs(b) < 1e-14 else (-a * x_array - c) / b
+    y1 = get_y(a1, b1, c1, x_vals)
+    if y1 is not None:
+        plt.plot(x_vals, y1, label=f"R1: {a1}x + {b1}y + {c1} = 0", color="darkorange")
+    else:
+        x_const = -c1 / a1
+        plt.axvline(x_const, color="darkorange", label=f"R1: x = {x_const:.2f}")
+    y2 = get_y(a2, b2, c2, x_vals)
+    if y2 is not None:
+        plt.plot(x_vals, y2, label=f"R2: {a2}x + {b2}y + {c2} = 0", color="teal")
+    else:
+        x_const = -c2 / a2
+        plt.axvline(x_const, color="teal", label=f"R2: x = {x_const:.2f}")
+    y3 = get_y(a3, b3, c3, x_vals)
+    if y3 is not None:
+        plt.plot(x_vals, y3, label=f"R3: {a3}x + {b3}y + {c3} = 0", color="purple")
+    else:
+        x_const = -c3 / a3
+        plt.axvline(x_const, color="purple", label=f"R3: x = {x_const:.2f}")
+    
+    # Dibujar intersecciones (si existen)
+    if intersecciones.get("12") is not None:
+        x_sol, y_sol = intersecciones["12"]
+        plt.plot(x_sol, y_sol, "ko", label="Intersección 1-2")
+        plt.annotate(f"({round(x_sol,2)}, {round(y_sol,2)})", (x_sol, y_sol), textcoords="offset points", xytext=(5,5))
+    if intersecciones.get("13") is not None:
+        x_sol, y_sol = intersecciones["13"]
+        plt.plot(x_sol, y_sol, "ks", label="Intersección 1-3")
+        plt.annotate(f"({round(x_sol,2)}, {round(y_sol,2)})", (x_sol, y_sol), textcoords="offset points", xytext=(5,5))
+    if intersecciones.get("23") is not None:
+        x_sol, y_sol = intersecciones["23"]
+        plt.plot(x_sol, y_sol, "k^", label="Intersección 2-3")
+        plt.annotate(f"({round(x_sol,2)}, {round(y_sol,2)})", (x_sol, y_sol), textcoords="offset points", xytext=(5,5))
+    
+    plt.axhline(0, color="black", linewidth=0.5)
+    plt.axvline(0, color="black", linewidth=0.5)
+    plt.xlabel("Eje X")
+    plt.ylabel("Eje Y")
+    plt.title("Gráfica de las Tres Rectas")
+    plt.legend()
+    plt.grid(True)
+    plt.axis("equal")
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    plt.close()
+    return buf
+
+def graficarTresRectasInteractivo(a1, b1, c1, a2, b2, c2, a3, b3, c3, intersecciones):
+    x_vals = np.linspace(-10, 10, 400)
+    def get_y(a, b, c, x_array):
+        return None if abs(b) < 1e-14 else (-a * x_array - c) / b
+    y1 = get_y(a1, b1, c1, x_vals)
+    y2 = get_y(a2, b2, c2, x_vals)
+    y3 = get_y(a3, b3, c3, x_vals)
+    fig = go.Figure()
+    if y1 is not None:
+        fig.add_trace(go.Scatter(x=x_vals, y=y1, mode='lines', name=f"R1: {a1}x + {b1}y + {c1} = 0",
+                                 line=dict(color='darkorange')))
+    else:
+        x_const = -c1 / a1
+        fig.add_trace(go.Scatter(x=[x_const, x_const], y=[-10, 10], mode='lines', name=f"R1: x = {x_const:.2f}",
+                                 line=dict(color='darkorange')))
+    if y2 is not None:
+        fig.add_trace(go.Scatter(x=x_vals, y=y2, mode='lines', name=f"R2: {a2}x + {b2}y + {c2} = 0",
+                                 line=dict(color='teal')))
+    else:
+        x_const = -c2 / a2
+        fig.add_trace(go.Scatter(x=[x_const, x_const], y=[-10, 10], mode='lines', name=f"R2: x = {x_const:.2f}",
+                                 line=dict(color='teal')))
+    if y3 is not None:
+        fig.add_trace(go.Scatter(x=x_vals, y=y3, mode='lines', name=f"R3: {a3}x + {b3}y + {c3} = 0",
+                                 line=dict(color='purple')))
+    else:
+        x_const = -c3 / a3
+        fig.add_trace(go.Scatter(x=[x_const, x_const], y=[-10, 10], mode='lines', name=f"R3: x = {x_const:.2f}",
+                                 line=dict(color='purple')))
+    if intersecciones.get("12") is not None:
+        x_sol, y_sol = intersecciones["12"]
+        fig.add_trace(go.Scatter(x=[x_sol], y=[y_sol], mode='markers+text',
+                                 text=[f"({round(x_sol,2)},{round(y_sol,2)})"],
+                                 textposition="top center", name="Intersección 1-2",
+                                 marker=dict(color='black', symbol='circle', size=10)))
+    if intersecciones.get("13") is not None:
+        x_sol, y_sol = intersecciones["13"]
+        fig.add_trace(go.Scatter(x=[x_sol], y=[y_sol], mode='markers+text',
+                                 text=[f"({round(x_sol,2)},{round(y_sol,2)})"],
+                                 textposition="top center", name="Intersección 1-3",
+                                 marker=dict(color='black', symbol='square', size=10)))
+    if intersecciones.get("23") is not None:
+        x_sol, y_sol = intersecciones["23"]
+        fig.add_trace(go.Scatter(x=[x_sol], y=[y_sol], mode='markers+text',
+                                 text=[f"({round(x_sol,2)},{round(y_sol,2)})"],
+                                 textposition="top center", name="Intersección 2-3",
+                                 marker=dict(color='black', symbol='triangle-up', size=10)))
+    fig.update_layout(title="Gráfica Interactiva de las Tres Rectas",
+                      xaxis_title="Eje X",
+                      yaxis_title="Eje Y",
+                      legend_title="Leyenda",
+                      template="plotly_white")
+    return fig.to_html(full_html=False)
+
 # --- Rutas para login y autenticación ---
 
 @app.route("/login", methods=["GET", "POST"])
@@ -260,7 +367,7 @@ def index():
         return redirect(url_for("login"))
     
     if request.method == "POST":
-        modo = request.form.get("modo", "dos")  # "dos" por defecto
+        modo = request.form.get("modo", "dos")  # Valor por defecto: "dos"
         if modo == "una":
             try:
                 a1 = float(request.form["a1"])
@@ -279,7 +386,48 @@ def index():
                                    datos1=datos1,
                                    grafico_estatico=grafico_estatico,
                                    grafico_interactivo=grafico_interactivo)
-        else:
+        elif modo == "tres":
+            try:
+                a1 = float(request.form["a1"])
+                b1 = float(request.form["b1"])
+                c1 = float(request.form["c1"])
+                a2 = float(request.form["a2"])
+                b2 = float(request.form["b2"])
+                c2 = float(request.form["c2"])
+                a3 = float(request.form["a3"])
+                b3 = float(request.form["b3"])
+                c3 = float(request.form["c3"])
+            except ValueError:
+                return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
+            
+            datos1 = calcularDatosRecta(a1, b1, c1)
+            datos2 = calcularDatosRecta(a2, b2, c2)
+            datos3 = calcularDatosRecta(a3, b3, c3)
+            
+            inter12 = resolverSistema(a1, b1, c1, a2, b2, c2)
+            inter13 = resolverSistema(a1, b1, c1, a3, b3, c3)
+            inter23 = resolverSistema(a2, b2, c2, a3, b3, c3)
+            intersecciones = {}
+            if inter12 and inter12["tipo"] == "interseccion":
+                intersecciones["12"] = inter12["punto"]
+            if inter13 and inter13["tipo"] == "interseccion":
+                intersecciones["13"] = inter13["punto"]
+            if inter23 and inter23["tipo"] == "interseccion":
+                intersecciones["23"] = inter23["punto"]
+            
+            grafico_interactivo = graficarTresRectasInteractivo(a1, b1, c1, a2, b2, c2, a3, b3, c3, intersecciones)
+            buf = graficarTresRectas(a1, b1, c1, a2, b2, c2, a3, b3, c3, intersecciones)
+            grafico_estatico = base64.b64encode(buf.getvalue()).decode("ascii")
+            
+            return render_template("resultado.html",
+                                   modo="tres",
+                                   datos1=datos1,
+                                   datos2=datos2,
+                                   datos3=datos3,
+                                   intersecciones=intersecciones,
+                                   grafico_estatico=grafico_estatico,
+                                   grafico_interactivo=grafico_interactivo)
+        else:  # Modo "dos"
             try:
                 a1 = float(request.form["a1"])
                 b1 = float(request.form["b1"])
@@ -316,7 +464,7 @@ def index():
             
             distancia_interseccion = None
             if resultado and resultado["tipo"] == "interseccion" and resultado["punto"]:
-                distancia_interseccion = calcularDistancia((0,0), resultado["punto"])
+                distancia_interseccion = calcularDistancia((0, 0), resultado["punto"])
             
             grafico_interactivo = graficarRectasInteractivo(a1, b1, c1, a2, b2, c2, resultado)
             buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)

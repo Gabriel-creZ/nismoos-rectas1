@@ -73,8 +73,8 @@
             <h3><i class="fas fa-chart-line"></i> Gráfica Interactiva [PC Y Tablet]</h3>
             {{ grafico_interactivo|safe }}
           </div>
-        {% else %}
-          <!-- Modo "una ecuación" -->
+          
+        {% elif modo == "una" %}
           <h2 class="results-title">✅ Gráfica de la Recta</h2>
           <div class="result-item">
             <h3>=== Datos de la Recta ===</h3>
@@ -90,6 +90,59 @@
             <img src="data:image/png;base64,{{ grafico_estatico }}" alt="Gráfica de la recta" class="triangle-image">
           </div>
           
+          <div class="result-item">
+            <h3><i class="fas fa-chart-line"></i> Gráfica Interactiva [PC Y Tablet]</h3>
+            {{ grafico_interactivo|safe }}
+          </div>
+          
+        {% elif modo == "tres" %}
+          <h2 class="results-title">✅ Gráfica de las Tres Rectas</h2>
+          <div class="result-item">
+            <h3>=== Datos de la Recta 1 ===</h3>
+            <p>✴️  Pendiente: {{ datos1.pendiente if datos1.pendiente is not none else "Vertical" }}</p>
+            <p>🔸 Absisa (Intersección con eje X): {{ datos1.interseccionX }}</p>
+            <p>🔹 Ordenada (Intersección con eje Y): {{ datos1.interseccionY }}</p>
+            <p>📐 Inclinación (ángulo con eje X): {{ datos1.anguloConEjeX }}°</p>
+            <p>📏 Distancia desde el origen: {{ datos1.distanciaAlOrigen }}</p>
+          </div>
+          <div class="result-item">
+            <h3>=== Datos de la Recta 2 ===</h3>
+            <p>✴️  Pendiente: {{ datos2.pendiente if datos2.pendiente is not none else "Vertical" }}</p>
+            <p>🔸 Absisa (Intersección con eje X): {{ datos2.interseccionX }}</p>
+            <p>🔹 Ordenada (Intersección con eje Y): {{ datos2.interseccionY }}</p>
+            <p>📐 Inclinación (ángulo con eje X): {{ datos2.anguloConEjeX }}°</p>
+            <p>📏 Distancia desde el origen: {{ datos2.distanciaAlOrigen }}</p>
+          </div>
+          <div class="result-item">
+            <h3>=== Datos de la Recta 3 ===</h3>
+            <p>✴️  Pendiente: {{ datos3.pendiente if datos3.pendiente is not none else "Vertical" }}</p>
+            <p>🔸 Absisa (Intersección con eje X): {{ datos3.interseccionX }}</p>
+            <p>🔹 Ordenada (Intersección con eje Y): {{ datos3.interseccionY }}</p>
+            <p>📐 Inclinación (ángulo con eje X): {{ datos3.anguloConEjeX }}°</p>
+            <p>📏 Distancia desde el origen: {{ datos3.distanciaAlOrigen }}</p>
+          </div>
+          <div class="result-item">
+            <h3>=== Puntos de Intersección ===</h3>
+            {% if intersecciones["12"] is defined %}
+              <p>Intersección entre Recta 1 y 2: ({{ intersecciones["12"][0] }}, {{ intersecciones["12"][1] }})</p>
+            {% else %}
+              <p>Recta 1 y 2: No se intersecan.</p>
+            {% endif %}
+            {% if intersecciones["13"] is defined %}
+              <p>Intersección entre Recta 1 y 3: ({{ intersecciones["13"][0] }}, {{ intersecciones["13"][1] }})</p>
+            {% else %}
+              <p>Recta 1 y 3: No se intersecan.</p>
+            {% endif %}
+            {% if intersecciones["23"] is defined %}
+              <p>Intersección entre Recta 2 y 3: ({{ intersecciones["23"][0] }}, {{ intersecciones["23"][1] }})</p>
+            {% else %}
+              <p>Recta 2 y 3: No se intersecan.</p>
+            {% endif %}
+          </div>
+          <div class="result-item">
+            <h3><i class="fas fa-chart-pie"></i> Gráfica Estática de las Tres Rectas</h3>
+            <img src="data:image/png;base64,{{ grafico_estatico }}" alt="Gráfica de las tres rectas" class="triangle-image">
+          </div>
           <div class="result-item">
             <h3><i class="fas fa-chart-line"></i> Gráfica Interactiva [PC Y Tablet]</h3>
             {{ grafico_interactivo|safe }}

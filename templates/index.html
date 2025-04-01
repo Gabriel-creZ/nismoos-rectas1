@@ -31,15 +31,17 @@
           Ingresa los coeficientes en la forma Ax + By + C = 0.<br>
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
-        <!-- Se mueve el grupo de radio al interior del formulario -->
         <form method="POST">
           <div class="form-group" style="text-align: center;">
             <label><strong>Selecciona el modo de ingreso:</strong></label><br>
+            <input type="radio" name="modo" value="una" id="modo_una">
+            <label for="modo_una">1️⃣ Una Ecuación</label>
+            &nbsp;&nbsp;
             <input type="radio" name="modo" value="dos" id="modo_dos" checked>
             <label for="modo_dos">2️⃣ Dos Ecuaciones</label>
             &nbsp;&nbsp;
-            <input type="radio" name="modo" value="una" id="modo_una">
-            <label for="modo_una">1️⃣ Una Ecuación</label>
+            <input type="radio" name="modo" value="tres" id="modo_tres">
+            <label for="modo_tres">3️⃣ Tres Ecuaciones</label>
           </div>
           <!-- Campos de la primera ecuación -->
           <div class="form-group">
@@ -66,6 +68,19 @@
           <div class="form-group">
             <label for="c2">c₂:</label>
             <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
+          </div>
+          <!-- Campos de la tercera ecuación (inicialmente ocultos) -->
+          <div class="form-group">
+            <label for="a3">a₃:</label>
+            <input type="text" name="a3" id="a3" placeholder="Valor de a₃" required>
+          </div>
+          <div class="form-group">
+            <label for="b3">b₃:</label>
+            <input type="text" name="b3" id="b3" placeholder="Valor de b₃" required>
+          </div>
+          <div class="form-group">
+            <label for="c3">c₃:</label>
+            <input type="text" name="c3" id="c3" placeholder="Valor de c₃" required>
           </div>
           <button type="submit" class="btn">
             <i class="fas fa-calculator"></i> Calcular
@@ -98,27 +113,61 @@
     </div>
   </div>
   
-  <!-- Script para ocultar y deshabilitar campos de la segunda ecuación si se selecciona "Una Ecuación" -->
+  <!-- Script para actualizar la visibilidad y el estado de los campos según el modo seleccionado -->
   <script>
     const modoUna = document.getElementById('modo_una');
     const modoDos = document.getElementById('modo_dos');
-    const camposSegundaEcuacion = ['a2', 'b2', 'c2'];
+    const modoTres = document.getElementById('modo_tres');
+    const camposEcuacion2 = ['a2', 'b2', 'c2'];
+    const camposEcuacion3 = ['a3', 'b3', 'c3'];
     
     function actualizarVisibilidad() {
-      camposSegundaEcuacion.forEach(function(id) {
-        const campo = document.getElementById(id);
-        if(modoUna.checked) {
+      let modo = document.querySelector('input[name="modo"]:checked').value;
+      
+      // Para "una": mostrar solo la primera ecuación
+      if(modo === "una") {
+        camposEcuacion2.forEach(function(id) {
+          const campo = document.getElementById(id);
           campo.parentElement.style.display = 'none';
           campo.disabled = true;
-        } else {
+        });
+        camposEcuacion3.forEach(function(id) {
+          const campo = document.getElementById(id);
+          campo.parentElement.style.display = 'none';
+          campo.disabled = true;
+        });
+      }
+      // Para "dos": mostrar ecuación 1 y 2; ocultar 3
+      else if(modo === "dos") {
+        camposEcuacion2.forEach(function(id) {
+          const campo = document.getElementById(id);
           campo.parentElement.style.display = 'block';
           campo.disabled = false;
-        }
-      });
+        });
+        camposEcuacion3.forEach(function(id) {
+          const campo = document.getElementById(id);
+          campo.parentElement.style.display = 'none';
+          campo.disabled = true;
+        });
+      }
+      // Para "tres": mostrar todas las ecuaciones
+      else if(modo === "tres") {
+        camposEcuacion2.forEach(function(id) {
+          const campo = document.getElementById(id);
+          campo.parentElement.style.display = 'block';
+          campo.disabled = false;
+        });
+        camposEcuacion3.forEach(function(id) {
+          const campo = document.getElementById(id);
+          campo.parentElement.style.display = 'block';
+          campo.disabled = false;
+        });
+      }
     }
     
     modoUna.addEventListener('change', actualizarVisibilidad);
     modoDos.addEventListener('change', actualizarVisibilidad);
+    modoTres.addEventListener('change', actualizarVisibilidad);
     
     // Inicializar la visibilidad al cargar
     actualizarVisibilidad();
