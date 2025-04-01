@@ -220,7 +220,7 @@ body {
   margin: 0 auto;
 }
 
-/* Login container */
+/* Login container (usa contenedor blanco) */
 .login-container {
   background: white;
   max-width: 400px;
@@ -233,7 +233,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Footer */
+/* Pie de página */
 .footer {
   text-align: center;
   margin-top: 30px;
@@ -274,25 +274,4 @@ body {
     padding: 12px 20px;
     font-size: 1rem;
   }
-}
-
-/* Estilo para el recuadro azul del enlace externo */
-.external-link-box {
-  border: 2px solid #007BFF;
-  padding: 10px;
-  text-align: center;
-  margin-top: 30px;
-  width: 90%;
-  max-width: 600px;
-  border-radius: 8px;
-}
-
-.external-link-box a {
-  color: #007BFF;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.external-link-box a:hover {
-  text-decoration: underline;
 }
