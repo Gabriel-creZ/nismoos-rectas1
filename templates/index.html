@@ -28,17 +28,17 @@
       <div class="form-container">
         <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Coeficientes</h2>
         <div class="instruction">
-          Ingresa los coeficientes para la ecuación en la forma Ax + By + C = 0.<br>
-          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.✅
+          Ingresa los coeficientes en la forma Ax + By + C = 0.<br>
+          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
         <!-- Selección de modo -->
         <div class="form-group" style="text-align: center;">
           <label><strong>Selecciona el modo de ingreso:</strong></label><br>
           <input type="radio" name="modo" value="dos" id="modo_dos" checked>
-          <label for="modo_dos">Dos Ecuaciones</label>
+          <label for="modo_dos">Dos Ecuaciones 2️⃣</label>
           &nbsp;&nbsp;
           <input type="radio" name="modo" value="una" id="modo_una">
-          <label for="modo_una">Una Ecuación</label>
+          <label for="modo_una">Una Ecuación 1️⃣</label>
         </div>
         <form method="POST">
           <!-- Campos de la primera ecuación -->
@@ -106,7 +106,14 @@
     
     function actualizarVisibilidad() {
       camposSegundaEcuacion.forEach(function(id) {
-        document.getElementById(id).parentElement.style.display = modoUna.checked ? 'none' : 'block';
+        const campo = document.getElementById(id);
+        if(modoUna.checked) {
+          campo.parentElement.style.display = 'none';
+          campo.disabled = true;
+        } else {
+          campo.parentElement.style.display = 'block';
+          campo.disabled = false;
+        }
       });
     }
     
