@@ -31,16 +31,16 @@
           Ingresa los coeficientes en la forma Ax + By + C = 0.<br>
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
-        <!-- Selección de modo -->
-        <div class="form-group" style="text-align: center;">
-          <label><strong>Selecciona el modo de ingreso:</strong></label><br>
-          <input type="radio" name="modo" value="dos" id="modo_dos" checked>
-          <label for="modo_dos">Dos Ecuaciones 2️⃣</label>
-          &nbsp;&nbsp;
-          <input type="radio" name="modo" value="una" id="modo_una">
-          <label for="modo_una">Una Ecuación 1️⃣</label>
-        </div>
+        <!-- Se mueve el grupo de radio al interior del formulario -->
         <form method="POST">
+          <div class="form-group" style="text-align: center;">
+            <label><strong>Selecciona el modo de ingreso:</strong></label><br>
+            <input type="radio" name="modo" value="dos" id="modo_dos" checked>
+            <label for="modo_dos">2️⃣ Dos Ecuaciones</label>
+            &nbsp;&nbsp;
+            <input type="radio" name="modo" value="una" id="modo_una">
+            <label for="modo_una">1️⃣ Una Ecuación</label>
+          </div>
           <!-- Campos de la primera ecuación -->
           <div class="form-group">
             <label for="a1">a₁:</label>
@@ -98,7 +98,7 @@
     </div>
   </div>
   
-  <!-- Script para ocultar campos de la segunda ecuación si se selecciona "Una Ecuación" -->
+  <!-- Script para ocultar y deshabilitar campos de la segunda ecuación si se selecciona "Una Ecuación" -->
   <script>
     const modoUna = document.getElementById('modo_una');
     const modoDos = document.getElementById('modo_dos');
