@@ -148,6 +148,13 @@ def graficarRectaUnica(a, b, c, x_min=-10, x_max=10, y_min=-10, y_max=10):
     plt.close()
     return buf
 
+def parse_optional_float(valor, default):
+    """Convierte a float el valor recibido, usando el valor por defecto si el campo está vacío."""
+    if valor is None:
+        return default
+    valor = valor.strip()
+    return float(valor) if valor != "" else default
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -174,7 +181,7 @@ def index():
     
     if request.method == "POST":
         try:
-            # Conversión de coeficientes
+            # Conversión robusta a float para coeficientes
             a1 = float(request.form.get("a1", "0").strip())
             b1 = float(request.form.get("b1", "0").strip())
             c1 = float(request.form.get("c1", "0").strip())
@@ -182,24 +189,18 @@ def index():
             b2 = float(request.form.get("b2", "0").strip())
             c2 = float(request.form.get("c2", "0").strip())
             
-            # Validación de rangos opcionales:
-            # Si el campo está vacío se asigna el valor predeterminado (-10 o 10)
-            x_min_str = request.form.get("x_min", "").strip()
-            x_max_str = request.form.get("x_max", "").strip()
-            y_min_str = request.form.get("y_min", "").strip()
-            y_max_str = request.form.get("y_max", "").strip()
-            
-            x_min = float(x_min_str) if x_min_str != "" else -10
-            x_max = float(x_max_str) if x_max_str != "" else 10
-            y_min = float(y_min_str) if y_min_str != "" else -10
-            y_max = float(y_max_str) if y_max_str != "" else 10
+            # Rango de la gráfica, usando valores por defecto si están vacíos
+            x_min = parse_optional_float(request.form.get("x_min", ""), -10)
+            x_max = parse_optional_float(request.form.get("x_max", ""), 10)
+            y_min = parse_optional_float(request.form.get("y_min", ""), -10)
+            y_max = parse_optional_float(request.form.get("y_max", ""), 10)
             
             if x_min >= x_max or y_min >= y_max:
                 flash("Error: Los valores máximos deben ser mayores que los mínimos")
                 return render_template("index.html")
                 
         except ValueError:
-            flash("Error: Ingresa solo números (ej. 3, -2.5, 0.7).")
+            flash("Error: Ingresa solo números válidos (ej. 3, -2.5, 0.7). Usa punto para decimales.")
             return render_template("index.html")
         
         resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
@@ -223,12 +224,12 @@ def index():
         grafico = base64.b64encode(buf.getvalue()).decode("ascii")
         
         return render_template("resultado.html",
-                               resultado=resultado,
-                               datos1=datos1,
-                               datos2=datos2,
-                               comp_pendiente=comp_pendiente,
-                               angulo_entre_rectas=angulo_entre_rectas,
-                               grafico=grafico)
+                           resultado=resultado,
+                           datos1=datos1,
+                           datos2=datos2,
+                           comp_pendiente=comp_pendiente,
+                           angulo_entre_rectas=angulo_entre_rectas,
+                           grafico=grafico)
     return render_template("index.html")
 
 @app.route("/single", methods=["GET", "POST"])
@@ -242,15 +243,11 @@ def single():
             b = float(request.form["b"].strip())
             c = float(request.form["c"].strip())
             
-            x_min_str = request.form.get("x_min", "").strip()
-            x_max_str = request.form.get("x_max", "").strip()
-            y_min_str = request.form.get("y_min", "").strip()
-            y_max_str = request.form.get("y_max", "").strip()
-            
-            x_min = float(x_min_str) if x_min_str != "" else -10
-            x_max = float(x_max_str) if x_max_str != "" else 10
-            y_min = float(y_min_str) if y_min_str != "" else -10
-            y_max = float(y_max_str) if y_max_str != "" else 10
+            # Rango de la gráfica para la ecuación única
+            x_min = parse_optional_float(request.form.get("x_min", ""), -10)
+            x_max = parse_optional_float(request.form.get("x_max", ""), 10)
+            y_min = parse_optional_float(request.form.get("y_min", ""), -10)
+            y_max = parse_optional_float(request.form.get("y_max", ""), 10)
         except ValueError:
             flash("Error: Asegúrate de ingresar solo números válidos (ej. 3, -2.5, 0.7)")
             return render_template("single.html")
