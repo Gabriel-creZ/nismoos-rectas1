@@ -28,10 +28,20 @@
       <div class="form-container">
         <h2 class="form-title"><i class="fas fa-calculator"></i> Ingresar Coeficientes</h2>
         <div class="instruction">
-          Ingresa los coeficientes para cada recta en la forma Ax + By + C = 0.<br>
-          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6. ✅
+          Ingresa los coeficientes para la ecuación en la forma Ax + By + C = 0.<br>
+          Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.✅
+        </div>
+        <!-- Selección de modo -->
+        <div class="form-group" style="text-align: center;">
+          <label><strong>Selecciona el modo de ingreso:</strong></label><br>
+          <input type="radio" name="modo" value="dos" id="modo_dos" checked>
+          <label for="modo_dos">Dos Ecuaciones</label>
+          &nbsp;&nbsp;
+          <input type="radio" name="modo" value="una" id="modo_una">
+          <label for="modo_una">Una Ecuación</label>
         </div>
         <form method="POST">
+          <!-- Campos de la primera ecuación -->
           <div class="form-group">
             <label for="a1">a₁:</label>
             <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
@@ -44,6 +54,7 @@
             <label for="c1">c₁:</label>
             <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
           </div>
+          <!-- Campos de la segunda ecuación -->
           <div class="form-group">
             <label for="a2">a₂:</label>
             <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
@@ -86,5 +97,24 @@
       <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>
   </div>
+  
+  <!-- Script para ocultar campos de la segunda ecuación si se selecciona "Una Ecuación" -->
+  <script>
+    const modoUna = document.getElementById('modo_una');
+    const modoDos = document.getElementById('modo_dos');
+    const camposSegundaEcuacion = ['a2', 'b2', 'c2'];
+    
+    function actualizarVisibilidad() {
+      camposSegundaEcuacion.forEach(function(id) {
+        document.getElementById(id).parentElement.style.display = modoUna.checked ? 'none' : 'block';
+      });
+    }
+    
+    modoUna.addEventListener('change', actualizarVisibilidad);
+    modoDos.addEventListener('change', actualizarVisibilidad);
+    
+    // Inicializar la visibilidad al cargar
+    actualizarVisibilidad();
+  </script>
 </body>
 </html>

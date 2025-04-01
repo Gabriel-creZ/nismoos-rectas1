@@ -82,7 +82,6 @@ def calcularDistancia(p1, p2):
     return round(math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2), 2)
 
 def calcularAnguloEntreRectas(m1, m2):
-    # Calcula el ángulo entre dos rectas dadas sus pendientes.
     try:
         if m1 is None:  # Recta vertical
             ang1 = 90.0
@@ -93,7 +92,6 @@ def calcularAnguloEntreRectas(m1, m2):
         else:
             ang2 = math.degrees(math.atan(m2))
         angulo = abs(ang1 - ang2)
-        # Aseguramos que el ángulo no exceda 90 grados
         if angulo > 90:
             angulo = 180 - angulo
         return round(angulo, 2)
@@ -102,7 +100,6 @@ def calcularAnguloEntreRectas(m1, m2):
         return None
 
 def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
-    # Gráfico estático con matplotlib mejorado
     plt.figure(figsize=(7, 7))
     x_vals = np.linspace(-10, 10, 400)
     
@@ -126,7 +123,6 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     if resultado and resultado["tipo"] == "interseccion" and resultado["punto"] is not None:
         x_sol, y_sol = resultado["punto"]
         plt.plot(x_sol, y_sol, 'ko', label="Intersección")
-        # Etiqueta el punto de intersección
         plt.annotate(f"({round(x_sol,2)}, {round(y_sol,2)})", (x_sol, y_sol), textcoords="offset points", xytext=(5,5))
     
     plt.axhline(0, color='black', linewidth=0.5)
@@ -145,7 +141,6 @@ def graficarRectas(a1, b1, c1, a2, b2, c2, resultado):
     return buf
 
 def graficarRectasInteractivo(a1, b1, c1, a2, b2, c2, resultado):
-    # Gráfico interactivo usando Plotly
     x_vals = np.linspace(-10, 10, 400)
     
     def get_y(a, b, c, x_array):
@@ -182,7 +177,58 @@ def graficarRectasInteractivo(a1, b1, c1, a2, b2, c2, resultado):
                       yaxis_title="Eje Y",
                       legend_title="Leyenda",
                       template="plotly_white")
-    # Retornamos el HTML del gráfico
+    return fig.to_html(full_html=False)
+
+def graficarUnaRecta(a, b, c):
+    plt.figure(figsize=(7, 7))
+    x_vals = np.linspace(-10, 10, 400)
+    
+    def get_y(a, b, c, x_array):
+        return None if abs(b) < 1e-14 else (-a * x_array - c) / b
+    
+    y = get_y(a, b, c, x_vals)
+    if y is not None:
+        plt.plot(x_vals, y, label=f"{a}x + {b}y + {c} = 0", color="darkorange")
+    else:
+        x_const = -c / a
+        plt.axvline(x_const, color="darkorange", label=f"x = {x_const:.2f}")
+    
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+    plt.xlabel("Eje X")
+    plt.ylabel("Eje Y")
+    plt.title("Gráfica de la Recta")
+    plt.legend()
+    plt.grid(True)
+    plt.axis('equal')
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    plt.close()
+    return buf
+
+def graficarUnaRectaInteractivo(a, b, c):
+    x_vals = np.linspace(-10, 10, 400)
+    
+    def get_y(a, b, c, x_array):
+        return None if abs(b) < 1e-14 else (-a * x_array - c) / b
+    
+    y = get_y(a, b, c, x_vals)
+    fig = go.Figure()
+    if y is not None:
+        fig.add_trace(go.Scatter(x=x_vals, y=y, mode='lines', name=f"{a}x + {b}y + {c} = 0",
+                                 line=dict(color='darkorange')))
+    else:
+        x_const = -c / a
+        fig.add_trace(go.Scatter(x=[x_const]*2, y=[-10, 10], mode='lines', name=f"x = {x_const:.2f}",
+                                 line=dict(color='darkorange')))
+    
+    fig.update_layout(title="Gráfica Interactiva de la Recta",
+                      xaxis_title="Eje X",
+                      yaxis_title="Eje Y",
+                      legend_title="Leyenda",
+                      template="plotly_white")
     return fig.to_html(full_html=False)
 
 # --- Rutas para login y autenticación ---
@@ -192,7 +238,6 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # Validación con usuario "alumno" y contraseña "amrd"
         if username == "alumno" and password == "amrd":
             session["logged_in"] = True
             session["user"] = username
@@ -209,77 +254,90 @@ def logout():
     return redirect(url_for("login"))
 
 # --- Ruta principal (index) ---
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
     if request.method == "POST":
-        try:
-            a1 = float(request.form["a1"])
-            b1 = float(request.form["b1"])
-            c1 = float(request.form["c1"])
-            a2 = float(request.form["a2"])
-            b2 = float(request.form["b2"])
-            c2 = float(request.form["c2"])
-        except ValueError:
-            return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
-        
-        resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
-        datos1 = calcularDatosRecta(a1, b1, c1)
-        datos2 = calcularDatosRecta(a2, b2, c2)
-        
-        # Comparación de pendientes e inclinaciones
-        pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
-        pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
-        if abs(pendiente1) > abs(pendiente2):
-            comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
-        elif abs(pendiente2) > abs(pendiente1):
-            comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+        modo = request.form.get("modo", "dos")  # "dos" por defecto
+        if modo == "una":
+            try:
+                a1 = float(request.form["a1"])
+                b1 = float(request.form["b1"])
+                c1 = float(request.form["c1"])
+            except ValueError:
+                return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
+            
+            datos1 = calcularDatosRecta(a1, b1, c1)
+            buf = graficarUnaRecta(a1, b1, c1)
+            grafico_estatico = base64.b64encode(buf.getvalue()).decode("ascii")
+            grafico_interactivo = graficarUnaRectaInteractivo(a1, b1, c1)
+            
+            return render_template("resultado.html",
+                                   modo="una",
+                                   datos1=datos1,
+                                   grafico_estatico=grafico_estatico,
+                                   grafico_interactivo=grafico_interactivo)
         else:
-            comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
-        
-        ang1 = datos1["anguloConEjeX"]
-        ang2 = datos2["anguloConEjeX"]
-        if ang1 > ang2:
-            comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
-        elif ang2 > ang1:
-            comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
-        else:
-            comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
-        
-        # Calcular ángulo entre rectas (usando las pendientes originales)
-        angulo_entre = calcularAnguloEntreRectas(datos1["pendiente"], datos2["pendiente"])
-        
-        # Si existe intersección, calcular la distancia desde el origen
-        distancia_interseccion = None
-        if resultado and resultado["tipo"] == "interseccion" and resultado["punto"]:
-            distancia_interseccion = calcularDistancia((0,0), resultado["punto"])
-        
-        # Generar gráfica (se pueden escoger ambas, aquí se usa la interactiva)
-        grafico_interactivo = graficarRectasInteractivo(a1, b1, c1, a2, b2, c2, resultado)
-        # También se genera el gráfico estático
-        buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
-        grafico_estatico = base64.b64encode(buf.getvalue()).decode("ascii")
-        
-        return render_template("resultado.html",
-                               resultado=resultado,
-                               datos1=datos1,
-                               datos2=datos2,
-                               comp_pendiente=comp_pendiente,
-                               comp_inclinacion=comp_inclinacion,
-                               angulo_entre=angulo_entre,
-                               distancia_interseccion=distancia_interseccion,
-                               grafico_estatico=grafico_estatico,
-                               grafico_interactivo=grafico_interactivo)
+            try:
+                a1 = float(request.form["a1"])
+                b1 = float(request.form["b1"])
+                c1 = float(request.form["c1"])
+                a2 = float(request.form["a2"])
+                b2 = float(request.form["b2"])
+                c2 = float(request.form["c2"])
+            except ValueError:
+                return render_template("index.html", error="Por favor ingresa valores numéricos válidos.")
+            
+            resultado = resolverSistema(a1, b1, c1, a2, b2, c2)
+            datos1 = calcularDatosRecta(a1, b1, c1)
+            datos2 = calcularDatosRecta(a2, b2, c2)
+            
+            pendiente1 = datos1["pendiente"] if datos1["pendiente"] is not None else float('inf')
+            pendiente2 = datos2["pendiente"] if datos2["pendiente"] is not None else float('inf')
+            if abs(pendiente1) > abs(pendiente2):
+                comp_pendiente = f"🔥 La recta 1 tiene la mayor pendiente: {datos1['pendiente']}"
+            elif abs(pendiente2) > abs(pendiente1):
+                comp_pendiente = f"🔥 La recta 2 tiene la mayor pendiente: {datos2['pendiente']}"
+            else:
+                comp_pendiente = "🔥 Ambas rectas tienen la misma pendiente."
+            
+            ang1 = datos1["anguloConEjeX"]
+            ang2 = datos2["anguloConEjeX"]
+            if ang1 > ang2:
+                comp_inclinacion = f"🌟 La recta 1 tiene mayor inclinación: {ang1}°"
+            elif ang2 > ang1:
+                comp_inclinacion = f"🌟 La recta 2 tiene mayor inclinación: {ang2}°"
+            else:
+                comp_inclinacion = "🌟 Ambas rectas tienen la misma inclinación."
+            
+            angulo_entre = calcularAnguloEntreRectas(datos1["pendiente"], datos2["pendiente"])
+            
+            distancia_interseccion = None
+            if resultado and resultado["tipo"] == "interseccion" and resultado["punto"]:
+                distancia_interseccion = calcularDistancia((0,0), resultado["punto"])
+            
+            grafico_interactivo = graficarRectasInteractivo(a1, b1, c1, a2, b2, c2, resultado)
+            buf = graficarRectas(a1, b1, c1, a2, b2, c2, resultado)
+            grafico_estatico = base64.b64encode(buf.getvalue()).decode("ascii")
+            
+            return render_template("resultado.html",
+                                   modo="dos",
+                                   resultado=resultado,
+                                   datos1=datos1,
+                                   datos2=datos2,
+                                   comp_pendiente=comp_pendiente,
+                                   comp_inclinacion=comp_inclinacion,
+                                   angulo_entre=angulo_entre,
+                                   distancia_interseccion=distancia_interseccion,
+                                   grafico_estatico=grafico_estatico,
+                                   grafico_interactivo=grafico_interactivo)
     return render_template("index.html")
 
 # --- Rutas adicionales ---
-
 @app.route("/donar")
 def donar():
-    # Sección de donaciones
     return render_template("donar.html")
 
 @app.route("/reporte", methods=["GET", "POST"])
