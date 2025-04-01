@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Resultados - Resolución de Rectas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -22,11 +22,6 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
-      <div class="external-link">
-        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
-          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
-        </a>
-      </div>
     </header>
     
     <div class="content">
@@ -60,11 +55,7 @@
       
       <div class="result-item">
         <p>{{ comp_pendiente }}</p>
-        <p>{{ comp_inclinacion }}</p>
         <p>📊 Ángulo entre rectas: {{ angulo_entre_rectas }}°</p>
-        {% if distancia_interseccion_origen %}
-          <p>📏 Distancia intersección - origen: {{ distancia_interseccion_origen }}</p>
-        {% endif %}
       </div>
       
       <div class="result-item">
@@ -73,13 +64,14 @@
       </div>
       
       <div class="result-item">
-        <a href="{{ url_for('export_pdf') }}" class="btn"><i class="fas fa-file-pdf"></i> Exportar PDF</a>
-        <a href="{{ url_for('export_image') }}" class="btn"><i class="fas fa-image"></i> Exportar Imagen</a>
-      </div>
-      
-      <div class="result-item">
         <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-arrow-left"></i> Realizar nuevo cálculo</a>
       </div>
+    </div>
+    
+    <div class="triangle-link-container">
+      <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank" class="triangle-link">
+        <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+      </a>
     </div>
     
     <div class="footer">

@@ -275,3 +275,41 @@ body {
     font-size: 1rem;
   }
 }
+/* Estilos anteriores se mantienen igual */
+
+/* Nuevos estilos agregados */
+.triangle-link-container {
+  margin: 30px auto;
+  text-align: center;
+  width: 100%;
+}
+
+.triangle-link {
+  background-color: #4a6fa5;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.triangle-link:hover {
+  background-color: #3a5a8a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.triangle-link i {
+  margin-right: 8px;
+}
+
+/* Optimización de gráficos */
+.triangle-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
