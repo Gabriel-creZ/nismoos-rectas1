@@ -23,7 +23,13 @@
         <a href="{{ url_for('donations') }}">Donaciones</a> |
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       </nav>
+      <div class="external-link">
+        <a href="https://resolucion-triangulos-nismoos.onrender.com" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Da click aquí para resolver Triángulos y graficarlos
+        </a>
+      </div>
     </header>
+    
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="error-message">
@@ -33,6 +39,7 @@
         </div>
       {% endif %}
     {% endwith %}
+    
     <div class="content">
       <div class="form-container">
         <h2><i class="fas fa-calculator"></i> Ingresar Coeficientes para 2 Ecuaciones</h2>
@@ -41,6 +48,7 @@
           Ejemplo: Para 3x + y - 6 = 0, ingresa a=3, b=1, c=-6.
         </div>
         <form method="POST">
+          <!-- Primera ecuación -->
           <div class="form-group">
             <label for="a1">a₁:</label>
             <input type="text" name="a1" id="a1" placeholder="Valor de a₁" required>
@@ -53,6 +61,7 @@
             <label for="c1">c₁:</label>
             <input type="text" name="c1" id="c1" placeholder="Valor de c₁" required>
           </div>
+          <!-- Segunda ecuación -->
           <div class="form-group">
             <label for="a2">a₂:</label>
             <input type="text" name="a2" id="a2" placeholder="Valor de a₂" required>
@@ -65,6 +74,7 @@
             <label for="c2">c₂:</label>
             <input type="text" name="c2" id="c2" placeholder="Valor de c₂" required>
           </div>
+          <!-- Rango opcional -->
           <fieldset>
             <legend>Rango de la gráfica (opcional):</legend>
             <div class="form-group">
@@ -88,6 +98,7 @@
         </form>
       </div>
     </div>
+    
     <div class="footer">
       <em>@ 2025 Instant Math Solver - Herramienta educativa desarrollada por Gabriel Castillo - Alumno AMRD</em>
     </div>

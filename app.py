@@ -205,20 +205,34 @@ def generar_pdf_resultado(textos):
         print(f"Error al generar PDF: {e}")
         return None
 
-    mem = io.BytesIO()
     try:
-        pdf.output(mem)
+        # Utilizamos dest="S" para obtener el PDF como string
+        pdf_data = pdf.output(dest="S").encode("latin1")
     except Exception as e:
         print(f"Error al escribir PDF: {e}")
         return None
+    mem = io.BytesIO(pdf_data)
     mem.seek(0)
     return mem
 
 # -------------------------------------------------------------------------
-# Rutas de la aplicación
+# Ruta para exportar imagen del gráfico (opción adicional)
 # -------------------------------------------------------------------------
+@app.route("/export/image")
+def export_image():
+    export_data = session.get("export_data")
+    if not export_data or "grafico" not in export_data:
+        flash("No hay imagen para exportar.")
+        return redirect(url_for("index"))
+    img_data = base64.b64decode(export_data["grafico"])
+    mem = io.BytesIO(img_data)
+    mem.seek(0)
+    return send_file(mem, mimetype="image/png", as_attachment=True, download_name="grafico.png")
 
-# Para evitar errores en peticiones HEAD, se incluye el método HEAD en estas rutas.
+# -------------------------------------------------------------------------
+# Rutas de autenticación y navegación
+# -------------------------------------------------------------------------
+# Incluir HEAD para evitar errores en Render.com
 @app.route("/login", methods=["GET", "POST", "HEAD"], endpoint="login")
 def login():
     if request.method == "POST":
@@ -298,7 +312,7 @@ def index():
         if resultado["tipo"] == "interseccion" and resultado["punto"]:
             distancia_interseccion_origen = distance_points(resultado["punto"], (0, 0))
         
-        # Guardar datos en sesión para exportar PDF
+        # Guardar datos en sesión para exportar PDF o imagen
         session["export_data"] = {
             "a1": a1, "b1": b1, "c1": c1,
             "a2": a2, "b2": b2, "c2": c2,
@@ -308,7 +322,8 @@ def index():
             "comp_pendiente": comp_pendiente,
             "comp_inclinacion": comp_inclinacion,
             "angulo_entre_rectas": angulo_entre_rectas,
-            "distancia_interseccion_origen": distancia_interseccion_origen
+            "distancia_interseccion_origen": distancia_interseccion_origen,
+            "grafico": grafico
         }
         
         return render_template("resultado.html",
@@ -330,6 +345,7 @@ def single():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
+    # Si ya se procesó un POST y existen resultados, solo mostrar resultados
     if request.method == "POST":
         try:
             a = float(request.form["a"])
@@ -353,7 +369,8 @@ def single():
         
         session["export_data_single"] = {
             "a": a, "b": b, "c": c,
-            "datos": datos
+            "datos": datos,
+            "grafico": grafico
         }
         
         return render_template("single.html", datos=datos, grafico=grafico)
@@ -410,6 +427,20 @@ def export_pdf_single():
         flash("Error al generar el PDF.")
         return redirect(url_for("single"))
     return send_file(pdf_io, mimetype="application/pdf", as_attachment=True, download_name="resultados_unica.pdf")
+
+# -------------------------------------------------------------------------
+# Exportar imagen del gráfico (opción adicional)
+# -------------------------------------------------------------------------
+@app.route("/export/image")
+def export_image():
+    export_data = session.get("export_data")
+    if not export_data or "grafico" not in export_data:
+        flash("No hay imagen para exportar.")
+        return redirect(url_for("index"))
+    img_data = base64.b64decode(export_data["grafico"])
+    mem = io.BytesIO(img_data)
+    mem.seek(0)
+    return send_file(mem, mimetype="image/png", as_attachment=True, download_name="grafico.png")
 
 # -------------------------------------------------------------------------
 # Reporte de Errores
