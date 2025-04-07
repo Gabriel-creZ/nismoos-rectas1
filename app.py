@@ -17,7 +17,7 @@ app.secret_key = 'j350z271123r'  # Clave de seguridad para el login
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora en segundos
 
-# Configuración SMTP para reporte de errores (modificar según tu servidor)
+# Configuración SMTP para reporte de errores
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USER = 'castilloreyesgabriel4@gmail.com'
